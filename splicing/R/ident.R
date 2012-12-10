@@ -44,3 +44,24 @@ geneComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
         as.double(normalVar), as.double(numDevs),
         PACKAGE="splicing")
 } 
+
+isoComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
+                          paired=FALSE, fast=FALSE,
+                          fragmentProb=NULL, fragmentStart=0L, normalMean=NA,
+                          normalVar=NA, numDevs=4) {
+
+  require(MASS)
+
+  mat <- assignmentMatrix(geneStructure, gene=gene, readLength=readLength,
+                          overHang=overHang, paired=paired, fast=fast,
+                          fragmentProb=fragmentProb,
+                          fragmentStart=fragmentStart,
+                          normalMean=normalMean, normalVar=normalVar,
+                          numDevs=numDevs)
+
+  mat <- mat / sum(mat[1,])
+
+  matInv <- ginv(mat)
+
+  colSums(abs(matInv))
+}

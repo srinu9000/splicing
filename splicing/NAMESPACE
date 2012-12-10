@@ -65,7 +65,7 @@ S3method("logLik", "MISOresult")
 S3method("runData", "MISOresult")
 S3method("confint", "MISOresult")
 
-export(geneComplexity, assignmentMatrix)
+export(geneComplexity, assignmentMatrix, isoComplexity)
 
 export(matchIso, solveIso, runLinear, writeLinear, solveIsoLinBias,
        solveIsoQuadBias)
