@@ -99,7 +99,8 @@ powCompSamp <- function(gene,
                         bioVar1=0,
                         bioVar2=0,
                         readLength=30,
-                        noReads=sum(isoLength(gene)[[1]]*trueExpr)/30*10,
+                        noReads1=sum(isoLength(gene)[[1]]*trueExpr1)/30*10,
+                        noReads2=sum(isoLength(gene)[[1]]*trueExpr2)/30*10,
                         noRep=100,
                         ## print dots to the console for each replicate
                         verbose=TRUE
@@ -112,13 +113,13 @@ powCompSamp <- function(gene,
   
   pvals <- sapply(1:noRep, function(i1) {
     reads1 <- lapply(1:sampleSize, function(i2) {
-      expr <- getExpr(trueExpr1, bioVar1, noReads)
-      simulateReads(gene, expression=expr, noReads=noReads,
+      expr <- getExpr(trueExpr1, bioVar1, noReads1)
+      simulateReads(gene, expression=expr, noReads=noReads1,
                     readLength=readLength)
     })
     reads2 <- lapply(1:sampleSize, function(i2) {
-      expr <- getExpr(trueExpr2, bioVar2, noReads)
-      simulateReads(gene, expression=expr, noReads=noReads,
+      expr <- getExpr(trueExpr2, bioVar2, noReads2)
+      simulateReads(gene, expression=expr, noReads=noReads2,
                     readLength=readLength)
     })
     
@@ -182,7 +183,7 @@ powProfile <- function(gene,
 ## One-sample t-test, comparing to zero
 
 powPresent <- function(gene,
-                       trueExpr1,
+                       trueExpr,
                        checkIso=1,
                        sampleSize=3,
                        bioVar=0,
