@@ -1,0 +1,10 @@
+*~
+/splicing/autom4te.cache/
+/splicing/config.log
+/splicing/config.status
+/splicing/configure
+/splicing_*.tar.gz
+/splicing/src/Makevars
+/splicing/src/config.h.in
+/splicing/src/splicing.so
+/splicing/src/*.o
