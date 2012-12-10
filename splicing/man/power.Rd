@@ -32,9 +32,8 @@ g2 <- createGene(list(c(1L,1000L), c(51L,1050L)), list(1L,2L))
 
 dev.new(width=12, height=4)
 layout(matrix(1:12, nrow=2))
-plotIso(g1)
-plotIso(g2)
-par(mar=c(5,4,4,2)+.1)
+plotIso(g1, mar=c(5,4,4,2)+.1)
+plotIso(g2, mar=c(5,4,4,2)+.1)
 
 ## Dominant isoforms
 p11 <- powDominant(g1, trueExpr=c(2/3, 1/3))
