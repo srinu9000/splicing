@@ -6,5 +6,6 @@
 /splicing_*.tar.gz
 /splicing/src/Makevars
 /splicing/src/config.h.in
+/splicing/src/config.h
 /splicing/src/splicing.so
 /splicing/src/*.o
