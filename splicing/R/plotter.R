@@ -26,7 +26,7 @@ mylines <- function(x, y, ...) {
 
 plotIso <- function(geneStructure, gene=1, xlab="", ylab="",
                     col=rainbow_hcl(noIso(geneStructure)[gene]),
-                    mar=c(0,0,2,0)+.1, axes=FALSE, ...) {
+                    mar=c(0,0,2,0)+.1, axes=FALSE, cex=1, ...) {
 
   require(colorspace)
   
@@ -55,7 +55,7 @@ plotIso <- function(geneStructure, gene=1, xlab="", ylab="",
          ytop=length(start)-i+1+.25, col=col[i], border=NA)
     text(xlim[1], length(start)-i+1+.35, adj=c(0,0),
          getIso(geneStructure)[[gene]][i],
-         xpd=NA, col=col[i])
+         xpd=NA, col=col[i], cex=cex)
   }
 }
 
@@ -100,8 +100,8 @@ plotMISO <- function(misoResult, type=c("area", "bars"), meanBars=FALSE,
                      col=rainbow_hcl(noIso(misoResult$geneStructure)),
                      legend=c("topright", "topleft", "rightmargin", "none"),
                      xlab="Isoform ratio", ylab="Relative frequency",
-                     frame=FALSE, axes=TRUE, cex.axis=0.8, lwd.axis=0.4,
-                     las=1, ...) {
+                     frame=FALSE, axes=TRUE, cex=0.8, cex.axis=0.8,
+                     lwd.axis=0.4, las=1, ...) {
 
   require(colorspace)
 
@@ -145,18 +145,18 @@ plotMISO <- function(misoResult, type=c("area", "bars"), meanBars=FALSE,
                   function(x) { paste(round(x,2), collapse="-")})
     if (legend == "topright") {
       xx <- 1
-      yy <- ylim[2]-(1:noIso(gene)-1)*strheight("[")*1.2
+      yy <- ylim[2]-(1:noIso(gene)-1)*strheight("[", cex=cex)*1.2
       adj <- c(1,1)
     } else if (legend == "topleft") {
       xx <- 0
-      yy <- ylim[2]-(1:noIso(gene)-1)*strheight("[")*1.2
+      yy <- ylim[2]-(1:noIso(gene)-1)*strheight("[", cex=cex)*1.2
       adj <- c(0,1)
     } else if (legend == "rightmargin") {
       xx <- 1
-      yy <- ylim[2]-(1:noIso(gene)-1)*strheight("[")*1.2
+      yy <- ylim[2]-(1:noIso(gene)-1)*strheight("[", cex=cex)*1.2
       adj <- c(0,1)
     }
-    text(xx, yy, adj=adj, xpd=NA, cex=.8,
+    text(xx, yy, adj=adj, xpd=NA, cex=cex,
          paste(round(rowMeans(misoResult$samples), 2),
                " [", annt, "]", sep=""), col=col, font=2)
   }
@@ -179,7 +179,8 @@ plotReads <- function(gene, reads, misoResult=NULL,
                       ## Default sizes of various plot regions
                       titleHeight=0.15, axisHeight=0.35,
                       geneBaseHeight=0.5, geneIsoHeight=0.5,
-                      misoWidth=2) {
+                      misoWidth=2, cex.title=2, cex.axis=.8,
+                      cex.names=1, cex.junc=1, cex.iso=1) {
 
   require(igraph)
   require(colorspace)
@@ -236,8 +237,8 @@ plotReads <- function(gene, reads, misoResult=NULL,
   ## Title
   par(mar=c(0,0,0,0))
   plot.new()
-  text(sum(par("usr")[1:2])/2, sum(par("usr")[3:4])/2, cex=1, geneIds(gene),
-       adj=c(1/2,1), xpd=NA)
+  text(sum(par("usr")[1:2])/2, sum(par("usr")[3:4])/2, cex=cex.title,
+       geneIds(gene), adj=c(1/2,1), xpd=NA)
   
   ## Common parameters
   start <- getExonStart(gene)
@@ -312,7 +313,7 @@ plotReads <- function(gene, reads, misoResult=NULL,
          axes=FALSE)
     xval <- seq(min(unlist(start)), max(unlist(end)))
     mypolygon(xval, rhist[[i]], col=sampleColors[i], border=NA)
-    axis(2, las=1, cex.axis=.8, lwd=.4)
+    axis(2, las=1, cex.axis=cex.axis, lwd=.4)
     allj <- unique(junc[[i]])
     jc <- table(match(paste(junc[[i]][,1], sep=":", junc[[i]][,2]),
                       paste(allj[,1], sep=":", allj[,2])))
@@ -340,36 +341,36 @@ plotReads <- function(gene, reads, misoResult=NULL,
       hei <- strheight(jc[j])
       tpos <- if (pos==1) max(spl$y) else min(spl$y)
       rect((jfromx+jtox)/2-wid, tpos-hei,
-           (jfromx+jtox)/2+wid, tpos+hei, col="white",
+           (jfromx+jtox)/2+wid, tpos+hei, col=par("bg"),
            border=NA, xpd=NA)
-      text((jfromx+jtox)/2, tpos, jc[j], xpd=NA)
+      text((jfromx+jtox)/2, tpos, jc[j], xpd=NA, cex=cex.junc)
     }
     segments(xlim[1], 0, xlim[2], 0, lty=1, lwd=.1, col=sampleColors[i])
     text(xlim[1], ylim[2], adj=c(0,0), names(reads)[i],
-         xpd=NA, col=sampleColors[i])
+         xpd=NA, col=sampleColors[i], cex=cex.names)
   }
 
   ## Axis
   par(mar=c(0,5,0,1)+.1)
   plot(NA, type="n", xlim=xlim, ylim=ylim, ylab="", axes=FALSE,
        xlab="Genomic coordinate", xpd=NA)
-  axis(1, cex.axis=.8, lwd=.4)
+  axis(1, cex.axis=cex.axis, lwd=.4)
   
   ## Plot the isoforms
-  plotIso(gene, mar=c(1,5,5,1)+.1, col=isoformColors)
+  plotIso(gene, mar=c(1,5,5,1)+.1, col=isoformColors, cex=cex.iso)
   
   if (!is.null(misoResult)) {
     lapply(misoResult, function(ms) {
       par(mar=c(0,1,1,5)+.1)
-      plotMISO(ms, col=isoformColors, legend="rightmargin", axes=FALSE,
+      plotMISO(ms, col=isoformColors, legend="topright", axes=FALSE,
                xlab="", ylab="", meanBars=misoMeanBars)
-      axis(2, lwd=0.4, cex.axis=0.8, las=1)
-      axis(1, lwd=0.4, cex.axis=0.8, las=1,
+      axis(2, lwd=0.4, cex.axis=cex.axis, las=1)
+      axis(1, lwd=0.4, cex.axis=cex.axis, las=1,
            at=pretty(0:1), labels=rep("", length(pretty(0:1))))
     })
     par(mar=c(0,1,0,5)+.1)
     plot(NA, type="n", xlim=0:1, ylim=0:1, xlab="", ylab="", axes=FALSE)
     title(xlab="MISO estimates", xpd=NA)
-    axis(1, cex.axis=0.8, lwd=.4)
+    axis(1, cex.axis=cex.axis, lwd=.4)
   }  
 }
