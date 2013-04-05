@@ -6,6 +6,7 @@ MISO <- function(geneStructure, gene=1L, reads,
                  noLag=10, start=c("auto", "uniform", "random", "given",
                              "linear"), startPsi=NULL, 
                  stopCond=c("convMean", "fixedno"),
+                 algorithm=c("reassign", "marginal", "classes"),
                  hyperparameters=rep(1, noIso(geneStructure)[gene]),
                  paired=isPaired(reads), fragmentProb=NULL, fragmentStart=0L,
                  normalMean=NA, normalVar=NA, numDevs=4) {
@@ -25,6 +26,8 @@ MISO <- function(geneStructure, gene=1L, reads,
   start <- switch(match.arg(start), "auto"=0L, "uniform"=1L, "random"=2L,
                   "given"=3L, "linear"=4L)
   stopCond <- switch(match.arg(stopCond), "fixedno"=0L, convMean=1L);
+  algorithm <- switch(match.arg(algorithm), "reassign"=0L, "marginal"=1L,
+                      "classes"=2L)
   
   if (!is.null(startPsi)) {
     startPsi <- structure(as.numeric(startPsi), dim=dim(startPsi))
@@ -36,7 +39,7 @@ MISO <- function(geneStructure, gene=1L, reads,
                  as.integer(noIterations), as.integer(maxIterations),
                  as.integer(noBurnIn), as.integer(noLag),
                  as.double(hyperparameters),
-                 as.integer(overHang), start, startPsi, stopCond,
+                 as.integer(overHang), start, algorithm, startPsi, stopCond,
                  PACKAGE="splicing")
   } else {
     if (!is.null(fragmentProb)) { fragmentProb <- as.double(fragmentProb) }

@@ -56,6 +56,11 @@ double splicing_logdnorm(double x, double mu, double sigma);
 
 extern const char *splicing_types[];
 
+typedef enum { SPLICING_ALGO_REASSIGN=0, /* classic */
+	       SPLICING_ALGO_MARGINAL=1, /* no assignments */
+	       SPLICING_ALGO_CLASSES=2	 /* collapsed to classes */
+} splicing_algorithm_t;
+
 typedef enum { SPLICING_TYPE_GENE, SPLICING_TYPE_MRNA, 
 	       SPLICING_TYPE_EXON, SPLICING_TYPE_CDS, 
 	       SPLICING_TYPE_START_CODON, SPLICING_TYPE_STOP_CODON }
@@ -193,6 +198,7 @@ int splicing_miso(const splicing_gff_t *gff, size_t gene,
 		  const char **cigarstr, int readLength, int overHang,
 		  int noChains, int noIterations, int maxIterations, 
 		  int noBurnIn, int noLag, const splicing_vector_t *hyperp, 
+		  splicing_algorithm_t algorithm,
 		  splicing_miso_start_t start, splicing_miso_stop_t stop,
 		  const splicing_matrix_t *start_psi,
 		  splicing_matrix_t *samples, splicing_vector_t *logLik, 
@@ -248,13 +254,14 @@ int splicing_mvrnorm(const splicing_matrix_t *mu, double sigma,
 int splicing_logit_inv(const splicing_matrix_t *x, 
 		       splicing_matrix_t *res, int len, int noChains);
 
-int splicing_score_joint(const splicing_matrix_int_t *assignment,
+int splicing_score_joint(splicing_algorithm_t algorithm,
+			 const splicing_matrix_int_t *assignment,
 			 int no_reads, int noChains, 
 			 const splicing_matrix_t *psi, 
 			 const splicing_vector_t *hyper, 
 			 const splicing_vector_int_t *effisolen,
 			 const splicing_vector_t *isoscores, 
-			 splicing_vector_t *score);
+			 const splicing_matrix_t *match,						 splicing_vector_t *score);
 
 int splicing_drift_proposal_init(int noiso, int noChains, 
 				 splicing_matrix_t *respsi, 
@@ -282,7 +289,8 @@ int splicing_drift_proposal_score(int noiso, int noChains,
 				  double sigma,
 				  splicing_vector_t *resscore);
 
-int splicing_metropolis_hastings_ratio(const splicing_matrix_int_t *ass,
+int splicing_metropolis_hastings_ratio(splicing_algorithm_t algorithm,
+				       const splicing_matrix_int_t *ass,
 				       int no_reads, int noChains,
 				       const splicing_matrix_t *psiNew,
 				       const splicing_matrix_t *alphaNew,
@@ -290,6 +298,7 @@ int splicing_metropolis_hastings_ratio(const splicing_matrix_int_t *ass,
 				       const splicing_matrix_t *alpha,
 				       double sigma,
 				       int noiso, 
+				       const splicing_matrix_t *match,
 				       const splicing_vector_int_t *effisolen,
 				       const splicing_vector_t *hyperp, 
 				       const splicing_vector_t *isoscores,

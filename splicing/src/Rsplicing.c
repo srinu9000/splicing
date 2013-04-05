@@ -676,7 +676,7 @@ SEXP R_splicing_miso(SEXP pgff, SEXP pgene, SEXP preads, SEXP preadLength,
 		     SEXP pnochains, SEXP pnoIterations, 
 		     SEXP pmaxIterations, SEXP pnoBurnIn, 
 		     SEXP pnoLag, SEXP phyperp, SEXP poverhang, SEXP pstart,
-		     SEXP pstart_psi, SEXP pstop) {
+		     SEXP palgo, SEXP pstart_psi, SEXP pstop) {
   
   size_t gene=INTEGER(pgene)[0]-1;
   SEXP result, names, class;
@@ -700,6 +700,7 @@ SEXP R_splicing_miso(SEXP pgff, SEXP pgene, SEXP preads, SEXP preadLength,
   splicing_vector_t class_counts;
   splicing_miso_rundata_t rundata;
   int start=INTEGER(pstart)[0];
+  int algo=INTEGER(palgo)[0];
   splicing_matrix_t start_psi;
   int stop=INTEGER(pstop)[0];
 
@@ -727,7 +728,7 @@ SEXP R_splicing_miso(SEXP pgff, SEXP pgene, SEXP preads, SEXP preadLength,
 
   splicing_miso(&gff, gene, &position, cigarstr, readLength, overhang,
 		noChains, noIterations, maxIterations, 
-		noBurnIn, noLag, &hyperp, start, stop,
+		noBurnIn, noLag, &hyperp, algo, start, stop,
 		isNull(pstart_psi) ? 0 : &start_psi,
 		&samples, &logLik, &match_matrix, &class_templates, 
 		&class_counts, /*assignment=*/ 0, &rundata);
@@ -1108,8 +1109,9 @@ SEXP R_splicing_score_joint(SEXP passignment, SEXP pnoreads, SEXP pnochains,
 
   splicing_vector_init(&score, 0);
 
-  splicing_score_joint(&assignment, noreads, nochains, &psi, &hyper, 
-		       &effisolen, &isoscores, &score);
+  splicing_score_joint(SPLICING_ALGO_REASSIGN,
+		       &assignment, noreads, nochains, &psi, &hyper, 
+		       &effisolen, &isoscores, /*match=*/ 0, &score);
   
   PROTECT(result=R_splicing_vector_to_SEXP(&score));
   splicing_vector_destroy(&score);
@@ -1281,10 +1283,11 @@ SEXP R_splicing_metropolis_hastings_ratio(SEXP passignment, SEXP pnoreads,
   splicing_vector_init(&pcJS, 0);
   splicing_vector_init(&ppJS, 0);
 
-  splicing_metropolis_hastings_ratio(&assignment, noreads, nochains, &psiNew, 
+  splicing_metropolis_hastings_ratio(SPLICING_ALGO_REASSIGN,
+				     &assignment, noreads, nochains, &psiNew, 
 				     &alphaNew, &psi, &alpha, sigma, noiso,
-				     &effisolen, &hyperp, &isoscores, full,
-				     &acceptP, &pcJS, &ppJS);
+				     /*match=*/ 0, &effisolen, &hyperp, 
+				     &isoscores, full, &acceptP, &pcJS, &ppJS);
   
   PROTECT(result=NEW_LIST(3));
   SET_VECTOR_ELT(result, 0, R_splicing_vector_to_SEXP(&acceptP));
