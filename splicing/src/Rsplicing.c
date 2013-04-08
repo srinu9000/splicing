@@ -1111,7 +1111,8 @@ SEXP R_splicing_score_joint(SEXP passignment, SEXP pnoreads, SEXP pnochains,
 
   splicing_score_joint(SPLICING_ALGO_REASSIGN,
 		       &assignment, noreads, nochains, &psi, &hyper, 
-		       &effisolen, &isoscores, /*match=*/ 0, &score);
+		       &effisolen, &isoscores, /*match=*/ 0,
+		       /*assignmentMatrix=*/ 0, /*matches=*/ 0, &score);
   
   PROTECT(result=R_splicing_vector_to_SEXP(&score));
   splicing_vector_destroy(&score);
@@ -1286,7 +1287,8 @@ SEXP R_splicing_metropolis_hastings_ratio(SEXP passignment, SEXP pnoreads,
   splicing_metropolis_hastings_ratio(SPLICING_ALGO_REASSIGN,
 				     &assignment, noreads, nochains, &psiNew, 
 				     &alphaNew, &psi, &alpha, sigma, noiso,
-				     /*match=*/ 0, &effisolen, &hyperp, 
+				     /*match=*/ 0, /*assignment=*/ 0,
+				     /*matches=*/ 0, &effisolen, &hyperp,
 				     &isoscores, full, &acceptP, &pcJS, &ppJS);
   
   PROTECT(result=NEW_LIST(3));

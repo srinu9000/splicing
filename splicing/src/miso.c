@@ -248,6 +248,8 @@ int splicing_score_joint(splicing_algorithm_t algorithm,
 			 const splicing_vector_int_t *effisolen,
 			 const splicing_vector_t *isoscores,
 			 const splicing_matrix_t *match,
+			 const splicing_matrix_t *assignmentMatrix,
+			 const splicing_vector_t *matches,
 			 splicing_vector_t *score) {
 
   int i, j, noiso = splicing_vector_int_size(effisolen);
@@ -277,6 +279,17 @@ int splicing_score_joint(splicing_algorithm_t algorithm,
 	  isoscore += MATRIX(*match, k, i) * MATRIX(*psi, k, j);
 	}
 	readProb += log(isoscore);
+      }
+    } else if (algorithm == SPLICING_ALGO_CLASSES) {
+      int no_classes=splicing_matrix_ncol(assignmentMatrix);
+      /* TODO: we could replace this with a matrix-vector multiplication */
+      for (i=0; i<no_classes; i++) {
+	double score=0.0;
+	int k;
+	for (k=0; k<noiso; k++) {
+	  score += MATRIX(*assignmentMatrix, k, i) * MATRIX(*psi, k, j);
+	}
+	readProb += log(score) * VECTOR(*matches)[i];
       }
     }
     
@@ -489,6 +502,8 @@ int splicing_metropolis_hastings_ratio(splicing_algorithm_t algorithm,
 				       double sigma,
 				       int noiso, 
 				       const splicing_matrix_t *match,
+				       const splicing_matrix_t *assignment,
+				       const splicing_vector_t *matches,
 				       const splicing_vector_int_t *effisolen,
 				       const splicing_vector_t *hyperp, 
 				       const splicing_vector_t *isoscores,
@@ -510,10 +525,10 @@ int splicing_metropolis_hastings_ratio(splicing_algorithm_t algorithm,
 
   SPLICING_CHECK(splicing_score_joint(algorithm, ass, no_reads, noChains,
 				      psiNew, hyperp, effisolen, isoscores, 
-				      match, ppJS));
+				      match, assignment, matches, ppJS));
   SPLICING_CHECK(splicing_score_joint(algorithm, ass, no_reads, noChains, psi,
 				      hyperp, effisolen, isoscores, match,
-				      pcJS));
+				      assignment, matches, pcJS));
   
   SPLICING_CHECK(splicing_drift_proposal_score(noiso, noChains, psi, alphaNew,
 					       sigma, &ptoCS));
@@ -655,6 +670,9 @@ int splicing_miso(const splicing_gff_t *gff, size_t gene,
   splicing_vector_int_t noexons;
   int shouldstop=0;
   splicing_matrix_t chainMeans, chainVars;
+  splicing_matrix_t assignmentMatrix;
+  splicing_vector_t matches;
+  int noClasses;
 
   if (algorithm != SPLICING_ALGO_REASSIGN &&
       algorithm != SPLICING_ALGO_MARGINAL &&
@@ -768,6 +786,23 @@ int splicing_miso(const splicing_gff_t *gff, size_t gene,
   splicing_vector_int_destroy(&noexons);
   SPLICING_FINALLY_CLEAN(1);
 
+  /* Calculate assignment matrix and the number of reads in each class,
+     if we are running that algorithm */
+  if (algorithm == SPLICING_ALGO_CLASSES) {
+    SPLICING_CHECK(splicing_vector_init(&matches, noClasses));
+    SPLICING_FINALLY(splicing_vector_destroy, &matches);
+    SPLICING_CHECK(splicing_matrix_init(&assignmentMatrix, 0, 0));
+    SPLICING_FINALLY(splicing_matrix_destroy, &assignmentMatrix);
+    SPLICING_CHECK(splicing_assignment_matrix(gff, gene, readLength, overHang,
+					      &assignmentMatrix));
+    splicing_matrix_norm_row(&assignmentMatrix);
+    noClasses=splicing_matrix_ncol(&assignmentMatrix);
+    SPLICING_CHECK(splicing_getMatchVector(gff, gene, noReads, position,
+					   cigarstr, overHang, readLength,
+					   mymatch_matrix, &assignmentMatrix,
+					   &matches));
+  }
+
   /* For the marginal algorithm, the match_matrix will contain 
      probabilities divided by effective isoform length */
   if (algorithm == SPLICING_ALGO_MARGINAL) {
@@ -822,6 +857,8 @@ int splicing_miso(const splicing_gff_t *gff, size_t gene,
 							alphaNew, psi, alpha,
 							sigma, noiso, 
 							mymatch_matrix,
+							&assignmentMatrix,
+							&matches,
 							&effisolen, hyperp,
 							&isoscores, 
 							m > 0 ? 1 : 0, 
@@ -899,6 +936,12 @@ int splicing_miso(const splicing_gff_t *gff, size_t gene,
     for (i=0; i<noReads; i++) {
       VECTOR(*assignment)[i] = MATRIX(vass, i, 0);
     }
+  }
+
+  if (algorithm == SPLICING_ALGO_CLASSES) {
+    splicing_matrix_destroy(&assignmentMatrix);
+    splicing_vector_destroy(&matches);
+    SPLICING_FINALLY_CLEAN(2);
   }
 
   splicing_vector_destroy(&isoscores);
