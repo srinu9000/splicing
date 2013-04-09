@@ -1088,31 +1088,50 @@ SEXP R_splicing_logit_inv(SEXP px, SEXP plen, SEXP pnochains) {
 
 SEXP R_splicing_score_joint(SEXP passignment, SEXP pnoreads, SEXP pnochains,
 			    SEXP ppsi, SEXP phyper, SEXP peffisolen,
-			    SEXP pisoscores) {
+			    SEXP pisoscores, SEXP palgorithm,
+			    SEXP pmatchmatrix, SEXP passignmentmatrix,
+			    SEXP pmatchvector) {
   
   SEXP result;
+  splicing_algorithm_t algorithm=INTEGER(palgorithm)[0];
   splicing_matrix_int_t assignment;
   splicing_vector_int_t effisolen;
   splicing_matrix_t psi;
   splicing_vector_t hyper, isoscores;
+  splicing_matrix_t matchMatrix, assignmentMatrix;
+  splicing_vector_t matchVector;
   int noreads=INTEGER(pnoreads)[0];
   int nochains=INTEGER(pnochains)[0];
   splicing_vector_t score;
   
   R_splicing_begin();
-  
-  R_splicing_SEXP_to_matrix_int(passignment, &assignment);
+
+  if (!isNull(passignment)) {
+    R_splicing_SEXP_to_matrix_int(passignment, &assignment);
+  }
   R_splicing_SEXP_to_vector_int(peffisolen, &effisolen);
   R_splicing_SEXP_to_matrix(ppsi, &psi);
   R_splicing_SEXP_to_vector(phyper, &hyper);
   R_splicing_SEXP_to_vector(pisoscores, &isoscores);
 
+  if (!isNull(pmatchmatrix)) {
+    R_splicing_SEXP_to_matrix(pmatchmatrix, &matchMatrix);
+  }
+  if (!isNull(passignmentmatrix)) {
+    R_splicing_SEXP_to_matrix(passignmentmatrix, &assignmentMatrix);
+  }
+  if (!isNull(pmatchvector)) {
+    R_splicing_SEXP_to_vector(pmatchvector, &matchVector);
+  }
+
   splicing_vector_init(&score, 0);
 
-  splicing_score_joint(SPLICING_ALGO_REASSIGN,
-		       &assignment, noreads, nochains, &psi, &hyper, 
-		       &effisolen, &isoscores, /*match=*/ 0,
-		       /*assignmentMatrix=*/ 0, /*matches=*/ 0, &score);
+  splicing_score_joint(algorithm, isNull(passignment) ? 0 : &assignment,
+		       noreads, nochains, &psi, &hyper,
+		       &effisolen, &isoscores,
+		       isNull(pmatchmatrix) ? 0 : &matchMatrix,
+		       isNull(passignmentmatrix) ? 0 : &assignmentMatrix,
+		       isNull(pmatchvector) ? 0 : &matchVector, &score);
   
   PROTECT(result=R_splicing_vector_to_SEXP(&score));
   splicing_vector_destroy(&score);
