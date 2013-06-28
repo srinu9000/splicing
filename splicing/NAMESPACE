@@ -24,6 +24,7 @@ S3method("constitutiveExons", "gff3")
 S3method("selectIso", "gff3")
 S3method("getExonSig", "gff3")
 S3method("getRegion", "gff3")
+S3method("str", "gff3")
 
 S3method("print", "splicingExonset")
 

@@ -486,6 +486,100 @@ print.gff3 <- function(x, verbose=TRUE, ...) {
   }
 }
 
+str.gff3 <- function(object, gene=1, mode=c("default", "minimal"),
+                     fullname=mode != "minimal", ...) {
+  mode <- match.arg(mode)
+
+  start <- getExonStart(object, gene)
+  end   <- getExonEnd(object, gene)
+  allstarts <- sort(unique(unlist(start)))
+  names(allstarts) <- rep("[", length(allstarts))
+  allends <- sort(unique(unlist(end)))
+  names(allends) <- rep("-]", length(allends))
+  temp <- sort(c(allstarts, allends))
+
+  ## put in introns
+  int <- (names(temp)[-1] == "[" &
+          names(temp)[-length(temp)] == "-]" &
+          temp[-1] != temp[-length(temp)] + 1)
+  names(temp) <- ifelse(c(int, FALSE),
+                        paste(names(temp), "-", sep=""), names(temp))
+
+  str <- mapply(start, end, SIMPLIFY=FALSE, FUN=function(s, e) {
+    ifelse(temp %in% c(s,e), names(temp),
+           substring("---", 1, nchar(names(temp))))
+  })
+
+  if (mode == "default") {
+    res <- sapply(str, paste, collapse="")
+    res <- gsub("\\-(?=[\\-]*\\])", "#", res, perl=TRUE)
+  } else if (mode == "minimal") {
+    res <- sapply(str, paste, collapse="")
+    res <- gsub("\\-(?=[\\-]*\\])", "#", res, perl=TRUE)
+    res <- matrix(unlist(strsplit(res, "")), ncol=length(res))
+    bri <- apply(res, 1, function(x) {
+      x <- unique(x)
+      ("[" %in% x || "]" %in% x) && (all(x %in% c("[", "-")) ||
+                                     all(x %in% c("]", "-")))
+    })
+    res <- apply(res[!bri,], 2, paste, collapse="")
+    res <- gsub("\\]", "-", gsub("\\[", "-", res))
+    names(res) <- names(str)
+  }
+
+  if (fullname) {
+    n <- names(res)
+  } else {
+    n <- format(seq_along(res))
+  }
+
+  cat(paste(n, ": ", res, sep=""), sep="\n", ...)
+}
+
+'
+gg <- createGene(list(c(1,500), c(1001,1100), c(951,1100), c(1301, 1400)),
+                 list(c(1,2,4), c(3,4)))
+
+minimal:
+--------
+
+1: #--#-#
+2: --##-#
+
+default:
+--------
+
+insilicogene-isoform-0: [#]--[#]-[#]
+insilicogene-isoform-1: ----[##]-[#]
+
+coords:
+--------
+
+insilicogene-isoform-0: [1:500]--[1001:1100]-[1301:1400]
+insilicogene-isoform-1: --------[951:::1100]-[1301:1400]
+
+lengths:
+--------
+
+insilicogene-isoform-0: [500]--[100]-[100]
+insilicogene-isoform-1: ------[150:]-[100]
+
+or
+
+insilicogene-isoform-0: 500--100-100
+insilicogene-isoform-1: ----150:-100
+
+exons:
+------
+insilicogene-isoform-0: [1]--[2]-[3]
+insilicogene-isoform-1: ----[44]-[3]
+
+or
+
+insilicogene-isoform-0: [1]--[2]-[3]
+insilicogene-isoform-1: ----[=4]-[3]
+'
+
 print.splicingExonset <- function(x, ...) {
   s <- if (length(x$start)==1) "" else "s"
   cat(sprintf('Set of %i exon%s, from %i sequences.\n', length(x$start), s,
