@@ -59,6 +59,23 @@ int bam_aux_del(bam1_t *b, uint8_t *s)
 	return 0;
 }
 
+int bam_aux_drop_other(bam1_t *b, uint8_t *s)
+{
+	if (s) {
+		uint8_t *p, *aux;
+		aux = bam1_aux(b);
+		p = s - 2;
+		__skip_tag(s);
+		memmove(aux, p, s - p);
+		b->data_len -= b->l_aux - (s - p);
+		b->l_aux = s - p;
+	} else {
+		b->data_len -= b->l_aux;
+		b->l_aux = 0;
+	}
+	return 0;
+}
+
 void bam_init_header_hash(bam_header_t *header)
 {
 	if (header->hash == 0) {
@@ -124,6 +141,10 @@ int bam_parse_region(bam_header_t *header, const char *str, int *ref_id, int *be
 			} else s[name_end] = ':', name_end = l;
 		}
 	} else iter = kh_get(s, h, str);
+        if (iter == kh_end(h)) {
+          free(s); 
+          return -1;
+        }
 	*ref_id = kh_val(h, iter);
 	// parse the interval
 	if (name_end < l) {
