@@ -237,13 +237,14 @@ int splicing_i_add_read(splicing_reads_t *reads, const bam1_t *read) {
     case 'd':
       l=snprintf(bufptr, REMAINING, "d:%lg", *(double*)s); s+=8; bufptr += l;
       break;
-    case 'z':
+    case 'Z':
     case 'H':
       l=snprintf(bufptr, REMAINING, "%c:", type); bufptr += l;
       while (*s) { 
 	if (REMAINING > 0) { *bufptr = *s; bufptr++; }
 	s++;
       }
+			s++;
       break;
     case 'B':
       sub_type = *(s++);
