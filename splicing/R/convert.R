@@ -486,7 +486,8 @@ print.gff3 <- function(x, verbose=TRUE, ...) {
   }
 }
 
-str.gff3 <- function(object, gene=1, mode=c("default", "coords"), shift=TRUE, fullname=TRUE,
+str.gff3 <- function(object, gene=1, mode=c("default", "coords", "lengths"),
+                     shift=TRUE, fullname=TRUE,
                      ...) {
   mode <- match.arg(mode)
 
@@ -533,6 +534,23 @@ str.gff3 <- function(object, gene=1, mode=c("default", "coords"), shift=TRUE, fu
                          isoform=iso)
     ## Exons
     chunk3 <- data.frame(chunk=paste(unlist(start), sep=":", unlist(end)),
+                         start=unlist(start)+1, end=unlist(end)-1,
+                         isoform=iso)
+    # Introns
+    chunk4 <- data.frame(chunk="-", start=unlist(istart), end=unlist(iend),
+                         isoform=iiso)
+    chunks <- rbind(chunk1, chunk2, chunk3, chunk4)
+    exon <- ":"
+    intron <- "-"
+  } else if (mode == "lengths") {
+    ## Starts
+    chunk1 <- data.frame(chunk="[", start=unlist(start), end=unlist(start),
+                         isoform=iso)
+    ## Ends
+    chunk2 <- data.frame(chunk="]", start=unlist(end), end=unlist(end),
+                         isoform=iso)
+    ## Exons
+    chunk3 <- data.frame(chunk=as.character(unlist(end)-unlist(start)+1),
                          start=unlist(start)+1, end=unlist(end)-1,
                          isoform=iso)
     # Introns
