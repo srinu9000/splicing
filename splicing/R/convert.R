@@ -486,51 +486,107 @@ print.gff3 <- function(x, verbose=TRUE, ...) {
   }
 }
 
-str.gff3 <- function(object, gene=1, mode=c("default", "minimal"),
-                     fullname=mode != "minimal", ...) {
+str.gff3 <- function(object, gene=1, mode=c("default", "coords"), shift=TRUE, fullname=TRUE,
+                     ...) {
   mode <- match.arg(mode)
 
+  noiso <- noIso(object)[gene]
   start <- getExonStart(object, gene)
   end   <- getExonEnd(object, gene)
-  allstarts <- sort(unique(unlist(start)))
-  names(allstarts) <- rep("[", length(allstarts))
-  allends <- sort(unique(unlist(end)))
-  names(allends) <- rep("-]", length(allends))
-  temp <- sort(c(allstarts, allends))
 
-  ## put in introns
-  int <- (names(temp)[-1] == "[" &
-          names(temp)[-length(temp)] == "-]" &
-          temp[-1] != temp[-length(temp)] + 1)
-  names(temp) <- ifelse(c(int, FALSE),
-                        paste(names(temp), "-", sep=""), names(temp))
+  if (shift) {
+    s <- min(unlist(start))
+    start <- lapply(start, "-", s-1)
+    end   <- lapply(end,   "-", s-1)
+  }
+  
+  iso   <- rep(1:length(start), sapply(start, length))
 
-  str <- mapply(start, end, SIMPLIFY=FALSE, FUN=function(s, e) {
-    ifelse(temp %in% c(s,e), names(temp),
-           substring("---", 1, nchar(names(temp))))
-  })
+  ## Introns
+  istart <- lapply(end, function(e) e[-length(e)]+1)
+  iend <- lapply(start, function(s) s[-1]-1)
+  iiso <- rep(1:length(istart), sapply(istart, length))
 
+  options(stringsAsFactors=FALSE)
   if (mode == "default") {
-    res <- sapply(str, paste, collapse="")
-    res <- gsub("\\-(?=[\\-]*\\])", "#", res, perl=TRUE)
-  } else if (mode == "minimal") {
-    res <- sapply(str, paste, collapse="")
-    res <- gsub("\\-(?=[\\-]*\\])", "#", res, perl=TRUE)
-    res <- matrix(unlist(strsplit(res, "")), ncol=length(res))
-    bri <- apply(res, 1, function(x) {
-      x <- unique(x)
-      ("[" %in% x || "]" %in% x) && (all(x %in% c("[", "-")) ||
-                                     all(x %in% c("]", "-")))
-    })
-    res <- apply(res[!bri,], 2, paste, collapse="")
-    res <- gsub("\\]", "-", gsub("\\[", "-", res))
-    names(res) <- names(str)
+    ## Starts
+    chunk1 <- data.frame(chunk="[", start=unlist(start), end=unlist(start),
+                         isoform=iso)
+    ## Ends
+    chunk2 <- data.frame(chunk="]", start=unlist(end), end=unlist(end),
+                         isoform=iso)
+    ## Exons
+    chunk3 <- data.frame(chunk="#", start=unlist(start)+1, end=unlist(end)-1,
+                         isoform=iso)
+    # Introns
+    chunk4 <- data.frame(chunk="-", start=unlist(istart), end=unlist(iend),
+                         isoform=iiso)
+    chunks <- rbind(chunk1, chunk2, chunk3, chunk4)
+    exon <- "#"
+    intron <- "-"
+  } else if (mode == "coords") {
+    ## Starts
+    chunk1 <- data.frame(chunk="[", start=unlist(start), end=unlist(start),
+                         isoform=iso)
+    ## Ends
+    chunk2 <- data.frame(chunk="]", start=unlist(end), end=unlist(end),
+                         isoform=iso)
+    ## Exons
+    chunk3 <- data.frame(chunk=paste(unlist(start), sep=":", unlist(end)),
+                         start=unlist(start)+1, end=unlist(end)-1,
+                         isoform=iso)
+    # Introns
+    chunk4 <- data.frame(chunk="-", start=unlist(istart), end=unlist(iend),
+                         isoform=iiso)
+    chunks <- rbind(chunk1, chunk2, chunk3, chunk4)
+    exon <- ":"
+    intron <- "-"
+    
   }
 
+  ## The big merge
+  res <- character(length(start))
+  pos <- min(unlist(start))
+  fill <- rep(intron, noiso)
+  while (nrow(chunks) != 0) {
+    ## Check which isoforms have the current position
+    sel <- chunks$start <= pos & pos <= chunks$end
+    seliso <- chunks$isoform[sel]
+    ## Move first characters from chunks to the result
+    newchar <- substring(chunks$chunk[sel], 1, 1)
+    res[seliso] <- paste(res[seliso], newchar, sep="")
+    chunks$chunk[sel] <- substring(chunks$chunk[sel], 2)
+    ## Add filler characters to the rest of the isoforms
+    notseliso <- setdiff(1:noiso, seliso)
+    if (length(notseliso) != 0) {
+      res[notseliso] <- paste(res[notseliso], fill[notseliso], sep="")
+    }
+    ## Remove any chunks that became empty
+    empty <- chunks$chunk == ""
+    if (any(empty)) { chunks <- chunks[!empty, , drop=FALSE ] }
+    ## Update filler characters based on exon starts and ends
+    fill[seliso] <- ifelse(newchar=="[", exon, ifelse(newchar=="]", intron, fill[seliso]))
+    ## Update position, set it to the new minimum
+    if (nrow(chunks) != 0) {
+      ppos <- min(chunks$end)
+      sel <- chunks$start <= ppos & ppos <= chunks$end
+      if ("]" %in% newchar && "[" %in% substring(chunks$chunk[sel], 1, 1)) {
+        pos <- pos + 1
+      } else {
+        pos <- ppos
+      }
+    }
+  }
+
+  ## Some postprocessing
+  if (mode == "coords") {
+    res <- gsub(":([0-9]+)(:+)\\]", ":\\2\\1]", res)
+  }
+  
   if (fullname) {
-    n <- names(res)
+    n <- names(start)
   } else {
-    n <- format(seq_along(res))
+    n <- format(seq_along(start))
   }
 
   cat(paste(n, ": ", res, sep=""), sep="\n", ...)
