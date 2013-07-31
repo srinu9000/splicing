@@ -69,6 +69,6 @@ S3method("confint", "MISOresult")
 export(geneComplexity, assignmentMatrix, isoComplexity, crComplexity)
 
 export(matchIso, solveIso, runLinear, writeLinear, solveIsoLinBias,
-       solveIsoQuadBias, mleIso)
+       solveIsoQuadBias, mleIso, splicingtest)
 
 export(powDominant, powAbund, powCompSamp, powProfile, powPresent)
