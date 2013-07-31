@@ -652,6 +652,19 @@ or
 
 insilicogene-isoform-0: [1]--[2]-[3]
 insilicogene-isoform-1: ----[=4]-[3]
+
+or
+
+insilicogene-isoform-0: [1]--[2]-[3]
+insilicogene-isoform-1: ----[44]-[3]
+
+1:    1- 500 [500]
+2: 1001-1100 [100]
+3: 1301-1400 [100]
+4:  951-1100 [150]
+
+## Maybe numbering can be sorted by start position
+
 '
 
 print.splicingExonset <- function(x, ...) {
