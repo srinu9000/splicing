@@ -46,11 +46,17 @@ geneComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
 } 
 
 isoComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
-                          paired=FALSE, fast=FALSE,
-                          fragmentProb=NULL, fragmentStart=0L, normalMean=NA,
-                          normalVar=NA, numDevs=4) {
+                          expr, noReads=1,
+                          paired=FALSE, fast=FALSE, fragmentProb=NULL,
+                          fragmentStart=0L, normalMean=NA, normalVar=NA,
+                          numDevs=4) {
 
   require(MASS)
+
+  if (missing(expr)) {
+    noi <- noIso(geneStructure)[gene]
+    expr <- rep(1/noi, noi)
+  }
 
   mat <- assignmentMatrix(geneStructure, gene=gene, readLength=readLength,
                           overHang=overHang, paired=paired, fast=fast,
@@ -59,9 +65,24 @@ isoComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
                           normalMean=normalMean, normalVar=normalVar,
                           numDevs=numDevs)
 
-  mat <- mat / sum(mat[1,])
+  mat <- t(mat / rowSums(mat))
+
+  il <- isoLength(geneStructure)[[gene]]
+  nf <- sum(il * expr)
+  e2 <- il * expr / nf
+
+  cc <- as.vector(mat %*% e2)
+  V <- -outer(cc, cc)
+  diag(V) <- cc * (1-cc)
+  V <- V * noReads
 
   matInv <- ginv(mat)
+  V2 <- matInv %*% V %*% t(matInv) / noReads^2
+  nf2 <- sum(e2 / il)
+  V3 <- V2 / nf2^2
+  V3 <- V3 / il
+  V3 <- t(t(V3)/il)
+  diag(V3)
+}
 
-  colSums(abs(matInv))
 }
