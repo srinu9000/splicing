@@ -1,4 +1,5 @@
 *~
+/splicing/DESCRIPTION
 /splicing/autom4te.cache/
 /splicing/config.log
 /splicing/config.status
@@ -9,3 +10,4 @@
 /splicing/src/config.h
 /splicing/src/splicing.so
 /splicing/src/*.o
+/splicing/src/splicing_version.h

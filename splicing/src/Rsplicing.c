@@ -2663,3 +2663,13 @@ SEXP R_splicing_estimate_fraglength(SEXP pexons, SEXP preadsfile,
   UNPROTECT(1);
   return result;
 }
+
+SEXP R_splicing_version() {
+  const char *version;
+  SEXP result;
+  splicing_version(&version, /*major=*/ 0, /*minor=*/ 0, /*patch=*/ 0);
+  PROTECT(result=NEW_CHARACTER(1));
+  SET_STRING_ELT(result, 0, mkChar(version));
+  UNPROTECT(1);
+  return result;
+}

@@ -14,3 +14,7 @@
 .Last.lib <- function(libpath) {
   .onUnload(libpath)
 }
+
+splicing_version <- function() {
+  .Call("R_splicing_version", PACKAGE="splicing")
+}

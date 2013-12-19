@@ -1,4 +1,6 @@
 
+export(splicing_version)
+
 export(listEnsemblGenes, getEnsemblGenes, readGFF3, writeGFF3)
 
 export(isGFF3, noGenes, seqIds, geneIds, selectGenes, noIso, geneTypes,

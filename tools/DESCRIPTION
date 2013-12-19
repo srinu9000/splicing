@@ -1,8 +1,8 @@
 Package: splicing
 Type: Package
 Title: Various functions to study alternative splicing.
-Version: 0.1
-Date: 2012-12-04
+Version: @@@@@@@@@@ missing @@@@@@@@@@
+Date: @@@@@@@@@@ missing @@@@@@@@@@
 Author: Gabor Csardi <gcsardi@stat.harvard.edu>
 Maintainer: Gabor Csardi <gcsardi@stat.harvard.edu>
 Suggests: RCurl, snow
