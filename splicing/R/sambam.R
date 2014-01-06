@@ -520,7 +520,7 @@ coverage_to_no_reads <- function(gff, gene=1, exp, coverage, readLength) {
     warning("Some isoforms are never detected")
   }
   isolen <- ifelse(efflen < 0, 0, isolen)
-  coverage * sum(exp * ceiling(isolen / rl))
+  coverage * sum(exp * ceiling(isolen / readLength))
 }
 
 getCoverage <- function(gff, gene=1, reads, exp) {

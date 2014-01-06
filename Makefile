@@ -12,10 +12,11 @@ splicing/DESCRIPTION: tools/DESCRIPTION
 	sed 's/^Version: .*$$/Version: '$(VERSION)'/' $<     | \
 	sed 's/^Date: .*$$/Date: '`date "+%Y-%m-%d"`'/' > $@
 
-.PHONY: splicing/DESCRIPTION
-
 splicing/src/splicing_version.h: tools/splicing_version.h
 	sed 's/@VERSION@/'$(REALVERSION)'/g' $< >$@
+	touch splicing/src/version.c
+
+.PHONY: splicing/DESCRIPTION splicing/src/splicing_version.h
 
 splicing_$(VERSION).tar.gz: splicing/DESCRIPTION splicing/NAMESPACE \
 		$(CFILES) $(RFILES) $(MANFILES) splicing/configure.in \
