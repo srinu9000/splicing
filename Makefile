@@ -12,6 +12,8 @@ splicing/DESCRIPTION: tools/DESCRIPTION
 	sed 's/^Version: .*$$/Version: '$(VERSION)'/' $<     | \
 	sed 's/^Date: .*$$/Date: '`date "+%Y-%m-%d"`'/' > $@
 
+.PHONY: splicing/DESCRIPTION
+
 splicing/src/splicing_version.h: tools/splicing_version.h
 	sed 's/@VERSION@/'$(REALVERSION)'/g' $< >$@
 
