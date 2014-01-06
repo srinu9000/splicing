@@ -91,43 +91,64 @@ crComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
                          normalVar=NA, numDevs=4) {
 
   require(MASS)
+  
+  rdirichlet <- function (n, alpha) {
+    l <- length(alpha)
+    x <- matrix(rgamma(l * n, alpha), ncol = l, byrow = TRUE)
+    sm <- x %*% rep(1, l)
+    x/as.vector(sm)
+  }
 
   noi <- noIso(geneStructure)[gene]
   if (missing(expr)) {
-    expr <- rep(1/noi, noi)
-  }
-
-  mat <- assignmentMatrix(geneStructure, gene=gene, readLength=readLength,
-                          overHang=overHang, expr, paired=paired, fast=fast,
-                          fragmentProb=fragmentProb,
-                          fragmentStart=fragmentStart,
-                          normalMean=normalMean, normalVar=normalVar,
-                          numDevs=numDevs)
-
-  elen <- rowSums(mat)
-  mat <- t(mat / elen)
-  noc <- nrow(mat)
-
-  X <- mat %*% (elen * expr)
-  Y <- sum(elen * expr)
-
-  I <- matrix(0, noi-1, noi-1)
-  for (k1 in 1:(noi-1)) {
-    for (k2 in k1:(noi-1)) {
-      C <- 0
-      for (i in 1:noc) {
-        if (X[i] > 1e-15) {
-          t1 <- (elen[k1]-elen[noi]) * (elen[k2]-elen[noi]) / (Y^2)
-          t2 <- (mat[i,k1]*elen[k1] - mat[i,noi]*elen[noi]) *
-            (mat[i,k2]*elen[k2] - mat[i,noi]*elen[noi]) / (X[i]^2)
-          C <- C + (X[i]/Y) * (t1 - t2)
-        }
-      }
-      I[k1,k2] <- I[k2,k1] <- -C
+    expr <- t(rdirichlet(100, rep(1, noi)))
+  } else {
+    if (is.matrix(expr)) {
+      expr <- cbind(expr)
+    } else {
+      expr <- cbind(expr)
+      colnames(expr) <- NULL
     }
   }
+  
+  mycr <- function(expr) {
+  
+    mat <- assignmentMatrix(geneStructure, gene=gene, readLength=readLength,
+                            overHang=overHang, expr, paired=paired, fast=fast,
+                            fragmentProb=fragmentProb,
+                            fragmentStart=fragmentStart,
+                            normalMean=normalMean, normalVar=normalVar,
+                            numDevs=numDevs)
+    
+    elen <- rowSums(mat)
+    mat <- t(mat / elen)
+    noc <- nrow(mat)
+    
+    X <- mat %*% (elen * expr)
+    Y <- sum(elen * expr)
+    
+    I <- matrix(0, noi-1, noi-1)
+    for (k1 in 1:(noi-1)) {
+      for (k2 in k1:(noi-1)) {
+        C <- 0
+        for (i in 1:noc) {
+          if (X[i] > 1e-15) {
+            t1 <- (elen[k1]-elen[noi]) * (elen[k2]-elen[noi]) / (Y^2)
+            t2 <- (mat[i,k1]*elen[k1] - mat[i,noi]*elen[noi]) *
+              (mat[i,k2]*elen[k2] - mat[i,noi]*elen[noi]) / (X[i]^2)
+            C <- C + (X[i]/Y) * (t1 - t2)
+          }
+        }
+        I[k1,k2] <- I[k2,k1] <- -C
+      }
+    }
+    
+    I[I==Inf] <- 1e100
+    cr <- ginv(I)
+    c(diag(cr), sum(cr))
+  }
 
-  I[I==Inf] <- 1e100
-  cr <- ginv(I)
-  c(diag(cr), sum(cr))
+  cr <- apply(expr, 2, mycr)
+  colnames(cr) <- colnames(expr)
+  cr
 }
