@@ -509,3 +509,22 @@ estimateFragLength <- function(genes, readsfile, reads, min_length, ...) {
   .Call("R_splicing_estimate_fraglength", genes, readsfile, reads,
         PACKAGE="splicing")
 }
+
+coverage_to_no_reads <- function(gff, gene=1, exp, coverage, readLength) {
+  isolen <- isoLength(gff)[[gene]]
+  efflen <- isolen - readLength + 1
+  if (all(efflen <= 0)) {
+    stop("No isoforms can be detected")
+  }
+  if (any(efflen <= 0)) {
+    warning("Some isoforms are never detected")
+  }
+  isolen <- ifelse(efflen < 0, 0, isolen)
+  coverage * sum(exp * ceiling(isolen / rl))
+}
+
+getCoverage <- function(gff, gene=1, reads, exp) {
+  rl <- eachReadLength(reads)
+  isolen <- isoLength(gff)[[gene]]
+  sum(rl) / sum(exp * isolen)
+}

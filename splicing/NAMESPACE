@@ -74,3 +74,5 @@ export(matchIso, solveIso, runLinear, writeLinear, solveIsoLinBias,
        solveIsoQuadBias, mleIso, splicingtest)
 
 export(powDominant, powAbund, powCompSamp, powProfile, powPresent)
+
+export(getCoverage, coverage_to_no_reads)
