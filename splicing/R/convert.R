@@ -31,7 +31,9 @@ getEnsemblGenes <- function(speciesName,
   }
   
   list2 <- getURL(paste(baseURL, sep="/", speciesName2, ""))
-  fname <- tail(strsplit(list2, " ")[[1]], 1)
+  list2lines <- strsplit(list2, "\n")[[1]]
+  fname <- tail(strsplit(grep(speciesName2, list2lines,
+                              ignore.case=TRUE, value=TRUE), " ")[[1]], 1)
 
   ## Download the file
   
