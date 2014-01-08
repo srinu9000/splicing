@@ -560,4 +560,8 @@ int splicing_gff_constitutive_exons(const splicing_gff_t *gff,
 				    int min_length, 
 				    splicing_constitutive_mode_t mode);
 
+
+int splicing_version(const char **version_string, int *major,
+		     int *minor, int *subminor);
+
 #endif
