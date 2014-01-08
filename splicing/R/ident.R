@@ -121,6 +121,8 @@ crComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
                             numDevs=numDevs)
     
     elen <- rowSums(mat)
+    elen2 <- isoLength(geneStructure)[[gene]] - readLength + 1
+    if (any(elen != elen2)) { stop("Probably wrong gene structure") }
     mat <- t(mat / elen)
     noc <- nrow(mat)
     
