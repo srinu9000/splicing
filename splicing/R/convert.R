@@ -105,7 +105,6 @@ gtf2gff3 <- function(gtf, verbose=TRUE) {
   res$type <- types[res$type]
   res$phase[res$phase=="."] <- "-1"
   res$phase <- as.integer(res$phase)
-  res$species <- attr(gtf, "species")
   
   res <- addGidTid(res)
 
@@ -115,6 +114,8 @@ gtf2gff3 <- function(gtf, verbose=TRUE) {
   res$source <- match(res$source[res$gid+1L], res$source_str)-1L
   res$strand <- strands[res$strand[res$gid+1L]]
 
+  res <- .Call("R_splicing_reindex_gff", res, PACKAGE="splicing")
+  res$species <- attr(gtf, "species")
   res
 }
 

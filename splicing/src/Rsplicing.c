@@ -2736,3 +2736,20 @@ SEXP R_splicing_version() {
   UNPROTECT(1);
   return result;
 }
+
+SEXP R_splicing_reindex_gff(SEXP pgff) {
+  splicing_gff_t gff;
+  SEXP result;
+
+  R_splicing_begin();
+
+  R_splicing_SEXP_to_gff_copy(pgff, &gff);
+  splicing_gff_reindex(&gff);
+  PROTECT(result = R_splicing_gff_to_SEXP(&gff));
+  splicing_gff_destroy(&gff);
+
+  R_splicing_end();
+
+  UNPROTECT(1);
+  return result;
+}
