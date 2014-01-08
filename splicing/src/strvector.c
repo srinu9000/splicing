@@ -32,6 +32,7 @@ int splicing_strvector_clear(splicing_strvector_t *v) {
     free(v->table[i]);
   }
   v->size=0;
+  return 0;
 }
 
 void splicing_strvector_destroy(splicing_strvector_t *v) {
@@ -175,6 +176,26 @@ int splicing_strvector_ipermute(splicing_strvector_t *v,
   
   splicing_free(copy);
   SPLICING_FINALLY_CLEAN(1);
+
+  return 0;
+}
+
+int splicing_strvector_set(splicing_strvector_t *sv, long int idx,
+                         const char *value) {
+
+  if (sv->table[idx] == SPLICING_STRVECTOR_ZERO) {
+    sv->table[idx] = splicing_Calloc(strlen(value)+1, char);
+    if (sv->table[idx]==0) {
+      SPLICING_ERROR("strvector set failed", SPLICING_ENOMEM);
+    }
+  } else {
+    char *tmp=splicing_Realloc(sv->table[idx], strlen(value)+1, char);
+    if (tmp==0) {
+      SPLICING_ERROR("strvector set failed", SPLICING_ENOMEM);
+    }
+    sv->table[idx]=tmp;
+  }
+  strcpy(sv->table[idx], value);
 
   return 0;
 }
