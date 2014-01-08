@@ -20,12 +20,15 @@ SEXP R_splicing_vector_int_index_to_SEXP(const splicing_vector_int_t *v,
 SEXP R_splicing_miso_rundata_to_SEXP(const splicing_miso_rundata_t *data);
 
 int R_splicing_SEXP_to_vector(SEXP pv, splicing_vector_t *v);
+int R_splicing_SEXP_to_vector_copy(SEXP pv, splicing_vector_t *v);
 int R_splicing_SEXP_to_vector_int(SEXP pv, splicing_vector_int_t *v);
 int R_splicing_SEXP_to_vector_int_copy(SEXP pv, splicing_vector_int_t *v);
 int R_splicing_SEXP_to_matrix(SEXP pm, splicing_matrix_t *m);
 int R_splicing_SEXP_to_matrix_int(SEXP pm, splicing_matrix_int_t *m);
 int R_splicing_SEXP_to_gff(SEXP pgff, splicing_gff_t *gff);
+int R_splicing_SEXP_to_gff_copy(SEXP pgff, splicing_gff_t *gff);
 int R_splicing_SEXP_to_strvector(SEXP pv, splicing_strvector_t *v);
+int R_splicing_SEXP_to_strvector_copy(SEXP pv, splicing_strvector_t *v);
 int R_splicing_SEXP_to_exons(SEXP pexons, splicing_vector_int_t *exons);
 int R_splicing_SEXP_to_isoforms(SEXP piso, splicing_vector_int_t *iso);
 

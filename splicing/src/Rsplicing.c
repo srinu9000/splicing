@@ -279,6 +279,13 @@ int R_splicing_SEXP_to_vector(SEXP pv, splicing_vector_t *v) {
   return 0;
 }
 
+int R_splicing_SEXP_to_vector_copy(SEXP pv, splicing_vector_t *v) {
+  int n=GET_LENGTH(pv);
+  splicing_vector_init(v, n);
+  memcpy(VECTOR(*v), REAL(pv), sizeof(int) * n);
+  return 0;
+}
+
 int R_splicing_SEXP_to_matrix(SEXP pm, splicing_matrix_t *m) {
   int *dim=INTEGER(GET_DIM(pm));
   R_splicing_SEXP_to_vector(pm, &m->data);
@@ -307,6 +314,17 @@ int R_splicing_SEXP_to_strvector(SEXP pv, splicing_strvector_t *v) {
   }
 
   return 1;
+}
+
+int R_splicing_SEXP_to_strvector_copy(SEXP pv, splicing_strvector_t *v) {
+  long int i;
+  v->free = 1;
+  splicing_strvector_init(v, GET_LENGTH(pv));
+  for (i=0; i<v->size; i++) {
+    splicing_strvector_set(v, i, CHAR(STRING_ELT(pv, i)));
+  }
+
+  return 0;
 }
 
 int R_splicing_SEXP_to_gff(SEXP pgff, splicing_gff_t *gff) {
@@ -346,6 +364,51 @@ int R_splicing_SEXP_to_gff(SEXP pgff, splicing_gff_t *gff) {
   R_splicing_SEXP_to_strvector(source_str, &gff->sources);
 
   gff->n = GET_LENGTH(start);
+  gff->nogenes = GET_LENGTH(genes);
+  gff->notranscripts = GET_LENGTH(transcripts);
+
+  return 0;
+}
+
+int R_splicing_SEXP_to_gff_copy(SEXP pgff, splicing_gff_t *gff) {
+
+  SEXP seqid, source, genes, transcripts, type, start, end, score,
+    strand, phase, ID, parent, seqid_str, source_str, attributes;
+
+  seqid = R_splicing_getListElement(pgff, "seqid");
+  source = R_splicing_getListElement(pgff, "source");
+  genes = R_splicing_getListElement(pgff, "gid");
+  transcripts = R_splicing_getListElement(pgff, "tid");
+  type = R_splicing_getListElement(pgff, "type");
+  start = R_splicing_getListElement(pgff, "start");
+  end = R_splicing_getListElement(pgff, "end");
+  score = R_splicing_getListElement(pgff, "score");
+  strand = R_splicing_getListElement(pgff, "strand");
+  phase = R_splicing_getListElement(pgff, "phase");
+  ID = R_splicing_getListElement(pgff, "ID");
+  parent = R_splicing_getListElement(pgff, "parent");
+  seqid_str = R_splicing_getListElement(pgff, "seqid_str");
+  source_str = R_splicing_getListElement(pgff, "source_str");
+  attributes = R_splicing_getListElement(pgff, "attributes");
+
+  R_splicing_SEXP_to_vector_int_copy(seqid, &gff->seqid);
+  R_splicing_SEXP_to_vector_int_copy(source, &gff->source);
+  R_splicing_SEXP_to_vector_int_copy(genes, &gff->genes);
+  R_splicing_SEXP_to_vector_int_copy(transcripts, &gff->transcripts);
+  R_splicing_SEXP_to_vector_int_copy(type, &gff->type);
+  R_splicing_SEXP_to_vector_int_copy(start, &gff->start);
+  R_splicing_SEXP_to_vector_int_copy(end, &gff->end);
+  R_splicing_SEXP_to_vector_copy(score, &gff->score);
+  R_splicing_SEXP_to_vector_int_copy(strand, &gff->strand);
+  R_splicing_SEXP_to_vector_int_copy(phase, &gff->phase);
+  R_splicing_SEXP_to_strvector_copy(ID, &gff->ID);
+  R_splicing_SEXP_to_vector_int_copy(parent, &gff->parent);
+  R_splicing_SEXP_to_strvector_copy(seqid_str, &gff->seqids);
+  R_splicing_SEXP_to_strvector_copy(source_str, &gff->sources);
+
+  gff->n = GET_LENGTH(start);
+  gff->nogenes = GET_LENGTH(genes);
+  gff->notranscripts = GET_LENGTH(transcripts);
 
   return 0;
 }
