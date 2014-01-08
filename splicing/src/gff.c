@@ -12,11 +12,6 @@ const char *splicing_types[] = { "gene", "mRNA", "exon", "CDS",
 /* TODO: do not ignore size */
 int splicing_gff_init(splicing_gff_t *gff, size_t size) {
 
-  if (size < 0) { 
-    SPLICING_ERROR("Cannot create GFF, `size' must be non-negative", 
-		   SPLICING_EINVAL);
-  }
-
   SPLICING_CHECK(splicing_strvector_init(&gff->seqids, 0));
   SPLICING_FINALLY(splicing_strvector_destroy, &gff->seqids);
   SPLICING_CHECK(splicing_strvector_init(&gff->sources, 0));
@@ -586,7 +581,7 @@ int splicing_i_gff_noiso_one(const splicing_gff_t *gff, size_t gene,
   size_t nogenes, idx1, idx2;
   SPLICING_CHECK(splicing_gff_nogenes(gff, &nogenes));
   
-  if (gene < 0 || gene >= nogenes) {
+  if (gene >= nogenes) {
     SPLICING_ERROR("Invalid gene id", SPLICING_EINVAL);
   }
 
@@ -627,7 +622,7 @@ int splicing_gff_noexons_one(const splicing_gff_t *gff, size_t gene,
   size_t nogenes, idx1, idx2, noiso, pos, il;
   SPLICING_CHECK(splicing_gff_nogenes(gff, &nogenes));
   
-  if (gene < 0 || gene >= nogenes) {
+  if (gene >= nogenes) {
     SPLICING_ERROR("Invalid gene id", SPLICING_EINVAL);
   }
 
@@ -823,7 +818,7 @@ int splicing_gff_gene_start_end_one(const splicing_gff_t *gff, size_t gene,
   size_t nogenes=splicing_vector_int_size(&gff->genes);
   size_t idx;
   
-  if (gene < 0 || gene >= nogenes) { 
+  if (gene >= nogenes) {
     SPLICING_ERROR("Invalid gene id", SPLICING_EINVAL); 
   }
   
