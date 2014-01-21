@@ -196,7 +196,7 @@ selectGenes.gff3 <- function(gff3, idx) {
   }
 
   if (is.character(idx)) {
-    idx <- match(idx, gff3$ID)
+    idx <- match(idx, gff3$ID[gff3$gid+1])
     if (any(is.na(idx))) {
       stop("unknown gene selected")
     }
