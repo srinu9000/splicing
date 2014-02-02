@@ -110,16 +110,16 @@ crComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
       colnames(expr) <- NULL
     }
   }
-  
+
+  mat <- assignmentMatrix(geneStructure, gene=gene, readLength=readLength,
+                          overHang=overHang, paired=paired, fast=fast,
+                          fragmentProb=fragmentProb,
+                          fragmentStart=fragmentStart,
+                          normalMean=normalMean, normalVar=normalVar,
+                          numDevs=numDevs)
+
   mycr <- function(expr) {
-  
-    mat <- assignmentMatrix(geneStructure, gene=gene, readLength=readLength,
-                            overHang=overHang, expr, paired=paired, fast=fast,
-                            fragmentProb=fragmentProb,
-                            fragmentStart=fragmentStart,
-                            normalMean=normalMean, normalVar=normalVar,
-                            numDevs=numDevs)
-    
+
     elen <- rowSums(mat)
     elen2 <- isoLength(geneStructure)[[gene]] - readLength + 1
     if (any(elen != elen2)) { stop("Probably wrong gene structure") }
