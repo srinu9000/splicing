@@ -85,6 +85,59 @@ isoComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
   diag(V3)
 }
 
+crMatrix <- function(geneStructure, gene=1, assignmentMatrix=NULL,
+                     readLength, overHang=1L,
+                     expr, paired=FALSE, fast=FALSE,
+                     fragmentProb=NULL, fragmentStart=0L, normalMean=NA,
+                     normalVar=NA, numDevs=4) {
+
+  require(MASS)
+
+  if (is.null(assignmentMatrix)) {
+    mat <- assignmentMatrix(geneStructure, gene=gene, readLength=readLength,
+                            overHang=overHang, paired=paired, fast=fast,
+                            fragmentProb=fragmentProb,
+                            fragmentStart=fragmentStart,
+                            normalMean=normalMean, normalVar=normalVar,
+                            numDevs=numDevs)
+  } else {
+    mat <- assignmentMatrix
+  }
+
+  noi <- noIso(geneStructure)[gene]
+  elen <- rowSums(mat)
+  elen2 <- isoLength(geneStructure)[[gene]] - readLength + 1
+  if (any(elen != elen2)) { stop("Probably wrong gene structure") }
+  mat <- t(mat / elen)
+  noc <- nrow(mat)
+
+  X <- mat %*% (elen * expr)
+  Y <- sum(elen * expr)
+
+  I <- matrix(0, noi-1, noi-1)
+  for (k1 in 1:(noi-1)) {
+    for (k2 in k1:(noi-1)) {
+      C <- 0
+      for (i in 1:noc) {
+        if (X[i] > 1e-15) {
+          t1 <- (elen[k1]-elen[noi]) * (elen[k2]-elen[noi]) / (Y^2)
+          t2 <- (mat[i,k1]*elen[k1] - mat[i,noi]*elen[noi]) *
+            (mat[i,k2]*elen[k2] - mat[i,noi]*elen[noi]) / (X[i]^2)
+          C <- C + (X[i]/Y) * (t1 - t2)
+        }
+      }
+      I[k1,k2] <- I[k2,k1] <- -C
+    }
+  }
+
+  I[I==Inf] <- 1e100
+  res <- ginv(I)
+
+  ## Fill in the last isoform
+  rs <- rowSums(res)
+  rbind(cbind(res, -rs), c(-rs, sum(rs)))
+}
+
 crComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
                          expr, paired=FALSE, fast=FALSE,
                          fragmentProb=NULL, fragmentStart=0L, normalMean=NA,
@@ -118,39 +171,15 @@ crComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
                           normalMean=normalMean, normalVar=normalVar,
                           numDevs=numDevs)
 
-  mycr <- function(expr) {
+  expr <- lapply(seq_len(ncol(expr)), function(i) expr[,i])
+  cr <- lapply(expr, crMatrix, geneStructure=geneStructure, gene=gene,
+               assignmentMatrix=mat, readLength=readLength,
+               overHang=overHang, paired=paired, fast=fast,
+               fragmentProb=fragmentProb, fragmentStart=fragmentStart,
+               normalMean=normalMean, normalVar=normalVar,
+               numDevs=numDevs)
+  cr <- sapply(cr, diag)
 
-    elen <- rowSums(mat)
-    elen2 <- isoLength(geneStructure)[[gene]] - readLength + 1
-    if (any(elen != elen2)) { stop("Probably wrong gene structure") }
-    mat <- t(mat / elen)
-    noc <- nrow(mat)
-    
-    X <- mat %*% (elen * expr)
-    Y <- sum(elen * expr)
-    
-    I <- matrix(0, noi-1, noi-1)
-    for (k1 in 1:(noi-1)) {
-      for (k2 in k1:(noi-1)) {
-        C <- 0
-        for (i in 1:noc) {
-          if (X[i] > 1e-15) {
-            t1 <- (elen[k1]-elen[noi]) * (elen[k2]-elen[noi]) / (Y^2)
-            t2 <- (mat[i,k1]*elen[k1] - mat[i,noi]*elen[noi]) *
-              (mat[i,k2]*elen[k2] - mat[i,noi]*elen[noi]) / (X[i]^2)
-            C <- C + (X[i]/Y) * (t1 - t2)
-          }
-        }
-        I[k1,k2] <- I[k2,k1] <- -C
-      }
-    }
-    
-    I[I==Inf] <- 1e100
-    cr <- ginv(I)
-    c(diag(cr), sum(cr))
-  }
-
-  cr <- apply(expr, 2, mycr)
   colnames(cr) <- colnames(expr)
   cr
 }
