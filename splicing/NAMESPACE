@@ -78,4 +78,4 @@ export(powDominant, powAbund, powCompSamp, powProfile, powPresent)
 
 export(getCoverage, coverage_to_no_reads)
 
-export(sim_expr_prof)
+export(sim_expr_prof, rmvnorm)
