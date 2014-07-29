@@ -91,47 +91,32 @@ crMatrix <- function(geneStructure, gene=1, assignmentMatrix=NULL,
                      fragmentProb=NULL, fragmentStart=0L, normalMean=NA,
                      normalVar=NA, numDevs=4) {
 
+  gene <- as.integer(gene)
+  if (!is.null(assignmentMatrix)) {
+    assignmentMatrix[] <- as.double(assignmentMatrix)
+  }
+  readLength <- as.integer(readLength)
+  overHang <- as.integer(overHang)
+  expr <- as.double(expr)
+  paired <- as.logical(paired)
+  fast <- as.logical(fast)
+  if (!is.null(fragmentProb)) {
+    fragmentProb <- as.double(fragmentProb)
+  }
+  fragmentStart <- as.integer(fragmentStart)
+  normalMean <- as.double(normalMean)
+  normalVar <- as.double(normalVar)
+  numDevs <- as.double(numDevs)
+
+  res <- .Call("R_splicing_cr_matrix", geneStructure, gene, assignmentMatrix,
+              readLength, overHang, expr, paired, fast, fragmentProb,
+              fragmentStart, normalMean, normalVar, numDevs,
+              PACKAGE = "splicing")
+
   require(MASS)
 
-  if (is.null(assignmentMatrix)) {
-    mat <- assignmentMatrix(geneStructure, gene=gene, readLength=readLength,
-                            overHang=overHang, paired=paired, fast=fast,
-                            fragmentProb=fragmentProb,
-                            fragmentStart=fragmentStart,
-                            normalMean=normalMean, normalVar=normalVar,
-                            numDevs=numDevs)
-  } else {
-    mat <- assignmentMatrix
-  }
-
-  noi <- noIso(geneStructure)[gene]
-  elen <- rowSums(mat)
-  elen2 <- isoLength(geneStructure)[[gene]] - readLength + 1
-  if (any(elen != elen2)) { stop("Probably wrong gene structure") }
-  mat <- t(mat / elen)
-  noc <- nrow(mat)
-
-  X <- mat %*% (elen * expr)
-  Y <- sum(elen * expr)
-
-  I <- matrix(0, noi-1, noi-1)
-  for (k1 in 1:(noi-1)) {
-    for (k2 in k1:(noi-1)) {
-      C <- 0
-      for (i in 1:noc) {
-        if (X[i] > 1e-15) {
-          t1 <- (elen[k1]-elen[noi]) * (elen[k2]-elen[noi]) / (Y^2)
-          t2 <- (mat[i,k1]*elen[k1] - mat[i,noi]*elen[noi]) *
-            (mat[i,k2]*elen[k2] - mat[i,noi]*elen[noi]) / (X[i]^2)
-          C <- C + (X[i]/Y) * (t1 - t2)
-        }
-      }
-      I[k1,k2] <- I[k2,k1] <- -C
-    }
-  }
-
-  I[I==Inf] <- 1e100
-  res <- ginv(I)
+  res[res == Inf] <- 1e100
+  res <- ginv(res)
 
   ## Fill in the last isoform
   rs <- rowSums(res)

@@ -2753,3 +2753,48 @@ SEXP R_splicing_reindex_gff(SEXP pgff) {
   UNPROTECT(1);
   return result;
 }
+
+SEXP R_splicing_cr_matrix(SEXP p_gff, SEXP p_gene, SEXP p_ass_mat,
+			  SEXP p_read_len, SEXP p_overhang, SEXP p_expr,
+			  SEXP p_paired, SEXP p_fast_ass_mat,
+			  SEXP p_fragment_prob, SEXP p_fragment_start,
+			  SEXP p_normal_mean, SEXP p_normal_var,
+			  SEXP p_num_devs) {
+  SEXP result;
+  splicing_gff_t gff;
+  size_t gene = INTEGER(p_gene)[0] - 1;
+  splicing_matrix_t ass_mat;
+  int read_len = INTEGER(p_read_len)[0];
+  int overhang = INTEGER(p_overhang)[0];
+  splicing_vector_t expr;
+  int paired = LOGICAL(p_paired)[0];
+  int fast_ass_mat = LOGICAL(p_fast_ass_mat)[0];
+  splicing_vector_t fragment_prob;
+  int fragment_start = INTEGER(p_fragment_start)[0];
+  double normal_mean = REAL(p_normal_mean)[0];
+  double normal_var = REAL(p_normal_var)[0];
+  double num_devs = REAL(p_num_devs)[0];
+  splicing_matrix_t c_result;
+
+  R_splicing_SEXP_to_gff(p_gff, &gff);
+  R_splicing_SEXP_to_vector(p_expr, &expr);
+  if (!isNull(p_ass_mat)) {
+    R_splicing_SEXP_to_matrix(p_ass_mat, &ass_mat);
+  }
+  if (!isNull(p_fragment_prob)) {
+    R_splicing_SEXP_to_vector(p_fragment_prob, &fragment_prob);
+  }
+
+  splicing_matrix_init(&c_result, 0, 0);
+  splicing_cr_matrix(&gff, gene, isNull(p_ass_mat) ? 0 : &ass_mat,
+		     read_len, overhang, &expr, paired, fast_ass_mat,
+		     isNull(p_fragment_prob) ? 0 : &fragment_prob,
+		     fragment_start, normal_mean, normal_var, num_devs,
+		     &c_result);
+
+  PROTECT(result = R_splicing_matrix_to_SEXP(&c_result));
+  splicing_matrix_destroy(&c_result);
+
+  UNPROTECT(1);
+  return result;
+}

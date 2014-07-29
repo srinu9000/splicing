@@ -564,4 +564,13 @@ int splicing_gff_constitutive_exons(const splicing_gff_t *gff,
 int splicing_version(const char **version_string, int *major,
 		     int *minor, int *subminor);
 
+int splicing_cr_matrix(const splicing_gff_t *gff, size_t gene,
+		       const splicing_matrix_t *ass_mat, int read_len,
+		       int overhang, const splicing_vector_t *expr,
+		       int paired, int fast,
+		       const splicing_vector_t *fragment_prob,
+		       int fragment_start, double normal_mean,
+		       double normal_var, double num_devs,
+		       splicing_matrix_t *result);
+
 #endif
