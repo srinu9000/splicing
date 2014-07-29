@@ -1,5 +1,6 @@
 
 importFrom(magrittr, "%>%")
+import(assertthat)
 
 export(splicing_version)
 
