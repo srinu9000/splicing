@@ -81,4 +81,4 @@ export(getCoverage, coverage_to_no_reads)
 
 export(sim_expr_prof, rmvnorm)
 
-export(power_pooled, power_pooled_all_iso)
+export(power_pooled, power_pooled_all_iso, power_rep, power_rep_all_iso)
