@@ -206,9 +206,9 @@ power_rep <- function(gene_structure, gene=1, isoform, coverage, no_reads,
   dW <- dW1 / dW2
   lambdaW <- (dom_expr - supp_expr) / sqrt(var_dom/n_dom + var_supp/n_supp)
 
-  qu <- qt(sig_level / 2, df = dW, lower = FALSE)
-  (pt(qu, df = dW, ncp = lambdaW, lower = FALSE) +
-   pt(-qu, df = dW, ncp = lambdaW, lower = TRUE))
+  qu <- qt(sig_level / 2, df = dW, lower.tail = FALSE)
+  (pt(qu, df = dW, ncp = lambdaW, lower.tail = FALSE) +
+   pt(-qu, df = dW, ncp = lambdaW, lower.tail = TRUE))
 }
 
 power_rep_all_iso <- function(gene_structure, gene = 1, ...) {
@@ -315,7 +315,8 @@ power_ts <- function(gene_structure, gene=1, isoform, coverage, no_reads,
   v <- n * no_timepoints- u - 1
 
   lambda <- f2 * (u + v + 1)
-  pf(qf(sig_level, u, v, lower = FALSE), u, v, lambda, lower = FALSE)
+  pf(qf(sig_level, u, v, lower.tail = FALSE), u, v, lambda,
+     lower.tail = FALSE)
 }
 
 power_ts_all_iso <- function(gene_structure, gene=1, ...) {

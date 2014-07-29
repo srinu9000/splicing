@@ -117,7 +117,7 @@ readMISO <- function(file) {
 
   ## samples
   tc <- textConnection(records[["samples"]])
-  samples <- t(matrix(scan(tc, what=0.0, quiet=TRUE), nc=runData$noIso,
+  samples <- t(matrix(scan(tc, what=0.0, quiet=TRUE), ncol=runData$noIso,
                       byrow=TRUE))
   close(tc)
 
@@ -128,13 +128,14 @@ readMISO <- function(file) {
 
   ## matchMatrix
   tc <- textConnection(records[["matchMatrix"]])
-  matchMatrix <- t(matrix(scan(tc, what=0.0, quiet=TRUE), nc=runData$noIso,
-                          byrow=TRUE))
+  matchMatrix <- t(matrix(scan(tc, what=0.0, quiet=TRUE),
+                         ncol=runData$noIso, byrow=TRUE))
   close(tc)
 
   ## classTemplates
   tc <- textConnection(records[["classTemplates"]])
-  classTemplates <- matrix(scan(tc, what=0.0, quiet=TRUE), nr=runData$noIso)
+  classTemplates <- matrix(scan(tc, what=0.0, quiet=TRUE),
+                          nrow=runData$noIso)
   close(tc)  
 
   ## classCounts
