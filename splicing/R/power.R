@@ -166,6 +166,13 @@ power_rep <- function(gene_structure, gene=1, isoform, coverage, no_reads,
                                      readLength=read_len)
   }
 
+  ## Cache un-normalized assignment matrix
+  amat <- assignmentMatrix(gene_structure, gene = gene,
+                          readLength = read_len, overHang = 1L,
+                          paired = FALSE, fast = FALSE,
+                          fragmentProb = NULL, fragmentStart = 0L,
+                          normalMean = NA, normalVar = NA, numDevs = 4)
+
   ## Expression profiles
   expr_dom <- rep((1-dom_expr) / (noiso-1), noiso)
   expr_dom[isoform] <- dom_expr
@@ -178,7 +185,7 @@ power_rep <- function(gene_structure, gene=1, isoform, coverage, no_reads,
   do_var <- function(bio_expr) {
     cr <- lapply(seq_len(nrow(bio_expr)), function(i) {
       crMatrix(gene_structure, gene=gene, readLength=read_len,
-               expr=bio_expr[i,])
+               expr=bio_expr[i,], assignmentMatrix = amat)
     })
     vv <- lapply(seq_len(nrow(bio_expr)), function(i) {
       rmvnorm(n_sim_sampling, mean=bio_expr[i,], sigma=cr[[i]] / no_reads)
@@ -262,6 +269,13 @@ power_ts <- function(gene_structure, gene=1, isoform, coverage, no_reads,
                                      readLength=read_len)
   }
 
+  ## Cache un-normalized assignment matrix
+  amat <- assignmentMatrix(gene_structure, gene = gene,
+                          readLength = read_len, overHang = 1L,
+                          paired = FALSE, fast = FALSE,
+                          fragmentProb = NULL, fragmentStart = 0L,
+                          normalMean = NA, normalVar = NA, numDevs = 4)
+
   ## Expression profiles
   expr <- sapply(iso_expr, function(e) {
     ee <- rep ((1 - e) / (noiso - 1), noiso)
@@ -274,7 +288,7 @@ power_ts <- function(gene_structure, gene=1, isoform, coverage, no_reads,
   do_var <- function(bio_expr, expr) {
     cr <- lapply(seq_len(nrow(bio_expr)), function(i) {
       crMatrix(gene_structure, gene=gene, readLength=read_len,
-               expr=bio_expr[i,])
+               expr=bio_expr[i,], assignmentMatrix = amat)
     })
     vv <- lapply(seq_len(nrow(bio_expr)), function(i) {
       rmvnorm(n_sim_sampling, mean=bio_expr[i, ], sigma=cr[[i]] / no_reads)
