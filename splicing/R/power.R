@@ -1,0 +1,113 @@
+
+power_pooled <- function(gene_structure, gene=1, isoform, coverage, no_reads,
+                        dom_expr=2/3, supp_expr=1/3, read_len=33,
+                        no_trials=100, sig_level=0.05) {
+  
+  assert_that(is.count(gene))
+  assert_that(is.count(isoform))
+  assert_that(!missing(coverage) || !missing(no_reads))
+  if (!missing(coverage)) {
+    assert_that(is.numeric(coverage), length(coverage) == 1,
+                coverage > 0)
+  }
+  if (!missing(no_reads)) {
+    assert_that(is.count(no_reads), no_reads >= 1)
+  }
+  assert_that(length(dom_expr) == 1, is.numeric(dom_expr),
+              dom_expr > 0, dom_expr < 1)
+  assert_that(length(supp_expr) == 1, is.numeric(supp_expr),
+              supp_expr > 0, supp_expr < 1)
+  assert_that(is.count(read_len))
+  assert_that(is.count(no_trials))
+
+  if (!missing(no_reads) && !missing(coverage)) {
+    warning("'no_reads' given, so 'coverage' is ignored")
+  }
+  
+  mygene <- selectGenes(gene_structure, gene)
+  noiso <- noIso(mygene)
+  assert_that(noiso > 1, isoform <= noiso)
+
+  if (missing(no_reads)) {
+    no_reads <- coverage_to_no_reads(gene_structure, gene=gene,
+                                     exp=rep(1/noiso, noiso),
+                                     coverage=coverage,
+                                     readLength=read_len)
+  }
+  
+
+  fail <- list(p=rep(1, no_trials), power=0)
+
+  mat <- assignmentMatrix(mygene, readLength=read_len)
+  elen <- rowSums(mat)
+  assert_that(are_equal(elen, isoLength(mygene)[[1]] - read_len + 1))
+
+  mat <- t(mat / elen)
+  noc <- nrow(mat)
+
+  ## Expression profiles
+  expr_dom <- rep((1-dom_expr) / (noiso-1), noiso)
+  expr_dom[isoform] <- dom_expr
+  assert_that(all.equal(sum(expr_dom), 1))
+
+  expr_supp <- rep((1-supp_expr) / (noiso-1), noiso)
+  expr_supp[isoform] <- supp_expr
+  assert_that(all.equal(sum(expr_supp), 1))
+
+  ## Check if the given isoform has unique reads.
+  ## If it does not, then we don't have much to do
+  uniq_m <- which(rowSums(mat != 0) == 1)
+  uniq_iso <- apply(mat[uniq_m, , drop=FALSE] != 0, 1, which)
+  if (!isoform %in% uniq_iso) { return(fail) }
+  
+  matching <- match(names(uniq_iso)[isoform == uniq_iso], rownames(mat))
+  assert_that(length(matching) == 1)
+
+  ## We also need to check if there is a class that is
+  ## definitely not matching the selected isoform.
+  if (all(mat[, isoform] > 0)) { return(fail) }
+
+  ## The odds for sampling (1) unique reads from the isoform
+  ## (2) reads definitely not matching the isoform, and
+  ## (3) ambiguous reads
+  p_dom <- mat %*% expr_dom
+  p_supp <- mat %*% expr_supp
+
+  non_matching <- which(mat[, isoform] == 0)
+  sample_odds_dom <- c(p_dom[matching],
+                       sum(p_dom[non_matching]),
+                       sum(p_dom[setdiff(seq_len(noc),
+                                         c(matching, non_matching))]))
+  assert_that(all.equal(sum(sample_odds_dom), 1))
+  
+  sample_odds_supp <- c(p_supp[matching],
+                        sum(p_supp[non_matching]),
+                        sum(p_supp[setdiff(seq_len(noc),
+                                           c(matching, non_matching))]))
+  assert_that(all.equal(sum(sample_odds_supp), 1))
+
+  ## OK, now sample 'no_trials' contingency tables and use
+  ## Fisher's exact test on the matching/non-matching part
+
+  con_table <- function(odds_dom, odds_supp) {
+    dom  <- sample(1:3, no_reads, replace=TRUE, prob=odds_dom)
+    supp <- sample(1:3, no_reads, replace=TRUE, prob=odds_supp)
+    t_dom <- table(factor(dom, levels=1:3))
+    t_supp <- table(factor(supp, levels=1:3))
+    cbind(t_dom, t_supp)[1:2,]
+  }
+
+  pvals <- sapply(1:no_trials, function(i) {
+    tab <- con_table(sample_odds_dom, sample_odds_supp)
+    fisher.test(tab)$p.value
+  })    
+
+  list(p = pvals, power = sum(pvals < sig_level) / length(pvals))
+}
+
+power_pooled_all_iso <- function(gene_structure, gene=1, ...) {
+  noiso <- noIso(gene_structure)[gene]
+  lapply(1:noiso, function(i) {
+    power_pooled(gene_structure=gene_structure, gene=gene, isoform=i, ...)
+  })
+}

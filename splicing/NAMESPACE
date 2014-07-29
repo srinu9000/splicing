@@ -80,3 +80,5 @@ export(matchIso, solveIso, runLinear, writeLinear, solveIsoLinBias,
 export(getCoverage, coverage_to_no_reads)
 
 export(sim_expr_prof, rmvnorm)
+
+export(power_pooled, power_pooled_all_iso)
