@@ -21,5 +21,6 @@ splicing/src/splicing_version.h: tools/splicing_version.h
 splicing_$(VERSION).tar.gz: splicing/DESCRIPTION splicing/NAMESPACE \
 		$(CFILES) $(RFILES) $(MANFILES) splicing/configure.in \
 		splicing/src/splicing_version.h
+	rm splicing/src/Makevars
 	cd splicing && autoconf && autoheader
 	R CMD build splicing
