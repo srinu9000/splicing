@@ -106,18 +106,19 @@ plotMISO <- function(misoResult, type=c("area", "bars"), meanBars=FALSE,
                      frame=FALSE, axes=TRUE, cex=0.8, cex.axis=0.8,
                      lwd.axis=0.4, las=1, ...) {
 
+  gene <- misoResult$geneStructure
+
   if (is.null(col)) {
     check_for_package("colorspace",
                       " for plotting MISO results with default colors")
     rainbow_hcl <- pkg_fun("colorspace", "rainbow_hcl")
-    col <- rainbow_hcl(noIso(misoResult$geneStructure))
-
+    col <- rainbow_hcl(noIso(gene))
   }
 
   type <- match.arg(type)
   legend <- match.arg(legend)
   
-  col <- rep(col, length.out=noIso(misoResult$geneStructure))
+  col <- rep(col, length.out=noIso(gene))
   colTrans <- paste(col, sep="", "66")
   colTrans2 <- paste(col, sep="", "a0")
   
