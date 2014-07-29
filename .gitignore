@@ -11,3 +11,5 @@
 /splicing/src/splicing.so
 /splicing/src/*.o
 /splicing/src/splicing_version.h
+/splicing/tests/*.Rout
+/splicing/tests/startup.Rs
