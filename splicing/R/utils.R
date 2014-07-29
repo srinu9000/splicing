@@ -27,10 +27,14 @@
     retval
   }
 
-check_for_package <- function(pkg, message = "") {
+check_for_package <- function(pkg, message = "", fail = TRUE) {
   res <- try(do.call("library", list(pkg)), silent = TRUE)
   if (inherits(res, "try-error")) {
-    stop("Cannot load package ", pkg, message, call. = FALSE)
+    if (fail) {
+      stop("Cannot load package ", pkg, message, call. = FALSE)
+    } else {
+      message("Cannot load packae ", pkg, message)
+    }
   }
 }
 
