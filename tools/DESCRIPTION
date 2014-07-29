@@ -12,5 +12,6 @@ Description: Various functions to study alternative splicing.
   It also supports gene visualization, checking whether
   isoform expression levels can be calculated for a given gene 
   structure, and a novel gene structure complexity measure.
+Imports: magrittr
 License: GPL (>= 2)
 LazyLoad: yes

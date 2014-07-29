@@ -1,4 +1,6 @@
 
+importFrom(magrittr, "%>%")
+
 export(splicing_version)
 
 export(listEnsemblGenes, getEnsemblGenes, readGFF3, writeGFF3)
