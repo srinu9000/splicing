@@ -210,3 +210,103 @@ power_rep_all_iso <- function(gene_structure, gene = 1, ...) {
     power_rep(gene_structure=gene_structure, gene=gene, isoform=i, ...)
   })
 }
+
+## Trend in time series. We do a linear regression against time steps.
+## The question is whether to do a weighted regression or not.
+## For weighted regression it is likely that we need to use
+## simulations. For the regular regression, there are some
+## analytical results, mostly from the Cohen book.
+
+## Let's do the simple regression first.
+
+## TODO: we can also do multiple 'n's at once
+
+power_ts <- function(gene_structure, gene=1, isoform, coverage, no_reads,
+                    n=3, no_timepoints=5, iso_expr=seq(1/4, 3/4,
+                                            length.out=no_timepoints),
+                    read_len=33, sig_level=0.05, bio_var=.2,
+                    n_sim=100, n_sim_sampling=10) {
+
+  assert_that(is.count(gene))
+  assert_that(is.count(isoform))
+  assert_that(!missing(coverage) || !missing(no_reads))
+  if (!missing(coverage)) {
+    assert_that(is.numeric(coverage), length(coverage) == 1,
+                coverage > 0)
+  }
+  if (!missing(no_reads)) {
+    assert_that(is.count(no_reads), no_reads >= 1)
+  }
+  assert_that(is.count(n))
+  assert_that(is.count(no_timepoints), no_timepoints >= 2)
+  assert_that(is.numeric(iso_expr), length(iso_expr) == no_timepoints,
+              all(iso_expr >= 0), all(iso_expr <= 1))
+  assert_that(is.count(read_len))
+  assert_that(is.numeric(sig_level), length(sig_level) == 1,
+              is.finite(sig_level), sig_level > 0, sig_level < 1)
+  assert_that(is.numeric(bio_var), length(bio_var) == 1,
+              is.finite(bio_var), bio_var >= 0)
+
+  if (!missing(no_reads) && !missing(coverage)) {
+    warning("'no_reads' given, so 'coverage' is ignored")
+  }
+
+  mygene <- selectGenes(gene_structure, gene)
+  noiso <- noIso(mygene)
+  assert_that(noiso > 1, isoform <= noiso)
+
+  if (missing(no_reads)) {
+    no_reads <- coverage_to_no_reads(gene_structure, gene=gene,
+                                     exp=rep(1/noiso, noiso),
+                                     coverage=coverage,
+                                     readLength=read_len)
+  }
+
+  ## Expression profiles
+  expr <- sapply(iso_expr, function(e) {
+    ee <- rep ((1 - e) / (noiso - 1), noiso)
+    ee[isoform] <- e
+    ee
+  })
+  assert_that(all.equal(colSums(expr), rep(1, no_timepoints)))
+
+  ## Estimate the pooled variance
+  do_var <- function(bio_expr, expr) {
+    cr <- lapply(seq_len(nrow(bio_expr)), function(i) {
+      crMatrix(gene_structure, gene=gene, readLength=read_len,
+               expr=bio_expr[i,])
+    })
+    vv <- lapply(seq_len(nrow(bio_expr)), function(i) {
+      rmvnorm(n_sim_sampling, mean=bio_expr[i, ], sigma=cr[[i]] / no_reads)
+    })
+    t(t(do.call(rbind, vv)) - expr)
+  }
+
+  bio_expr <- lapply(seq_len(ncol(expr)), function(i) {
+    sim_expr_prof(n_sim, expr[, i], bio_var=bio_var)
+  })
+
+  var_ts <- lapply(seq_along(bio_expr),
+                   function(i) do_var(bio_expr[[i]], expr[, i] ))
+  var <- apply(do.call(rbind, var_ts), 2, var)[isoform]
+
+  ## Correlation between time steps and expression,
+  ## as estimated by Spearman's correction
+  var_iso <- var(iso_expr)
+  r <- sqrt(var_iso/ (var_iso + var))
+  f2 <- r * r / ( 1 - r * r )
+
+  ## Power, acccoding to Cohen
+  u <- 1
+  v <- n * no_timepoints- u - 1
+
+  lambda <- f2 * (u + v + 1)
+  pf(qf(sig_level, u, v, lower = FALSE), u, v, lambda, lower = FALSE)
+}
+
+power_ts_all_iso <- function(gene_structure, gene=1, ...) {
+  noiso <- noIso(gene_structure)[gene]
+  sapply(1:noiso, function(i) {
+    power_ts(gene_structure=gene_structure, gene=gene, isoform=i, ...)
+  })
+}
