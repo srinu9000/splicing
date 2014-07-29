@@ -175,13 +175,19 @@ runData.MISOresult <- function(misoResult) {
   misoResult$runData
 }
 
-confint.MISOresult <- function(misoResult, level=0.95) {
+confint.MISOresult <- function(object, parm, level=0.95, ...) {
+  if (!missing(parm)) {
+    warning("'parm' argument ignored in confint.MISOresult")
+  }
+  if (length(list(...)) != 0) {
+    warning("extra arguments ignored in confint.MISOresult")
+  }
   if (level <= 0 || level >= 1) {
     stop("`level' must be greater than 0 and less than 1")
   }
   alpha <- 1-level
-  lw.idx <- round(alpha/2 * ncol(misoResult$samples))
-  up.idx <- round((1-alpha/2) * ncol(misoResult$samples))
-  ordered <- apply(misoResult$samples, 1, sort)
+  lw.idx <- round(alpha/2 * ncol(object$samples))
+  up.idx <- round((1-alpha/2) * ncol(object$samples))
+  ordered <- apply(object$samples, 1, sort)
   rbind(ordered[lw.idx,], ordered[up.idx,])
 }
