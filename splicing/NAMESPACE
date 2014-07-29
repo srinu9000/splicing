@@ -74,8 +74,6 @@ export(geneComplexity, assignmentMatrix, isoComplexity, crComplexity,
 export(matchIso, solveIso, runLinear, writeLinear, solveIsoLinBias,
        solveIsoQuadBias, mleIso, splicingtest)
 
-export(powDominant, powAbund, powCompSamp, powProfile, powPresent)
-
 export(getCoverage, coverage_to_no_reads)
 
 export(sim_expr_prof, rmvnorm)
