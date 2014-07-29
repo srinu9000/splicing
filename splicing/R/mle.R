@@ -22,8 +22,6 @@ logit_inv <- function(x) {
 mleIso <- function(geneStructure, gene=1, reads,
                    readLength=getReadLength(reads), method="BFGS", ...) {
 
-  require(MASS)
-  
   ass <- assignmentMatrix(geneStructure, gene=gene,
                           readLength=readLength)
   ass <- t(ass / rowSums(ass))

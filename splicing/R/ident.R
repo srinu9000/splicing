@@ -1,4 +1,21 @@
 
+ginv <-  function(X, tol = sqrt(.Machine$double.eps)) {
+  if (length(dim(X)) > 2L || !(is.numeric(X) || is.complex(X))) 
+    stop("'X' must be a numeric or complex matrix")
+  if (!is.matrix(X)) 
+    X <- as.matrix(X)
+  Xsvd <- svd(X)
+  if (is.complex(X)) 
+    Xsvd$u <- Conj(Xsvd$u)
+  Positive <- Xsvd$d > max(tol * Xsvd$d[1L], 0)
+  if (all(Positive)) 
+    Xsvd$v %*% (1/Xsvd$d * t(Xsvd$u))
+  else if (!any(Positive)) 
+    array(0, dim(X)[2L:1L])
+  else Xsvd$v[, Positive, drop = FALSE] %*% ((1/Xsvd$d[Positive]) * 
+                            t(Xsvd$u[, Positive, drop = FALSE]))
+}
+
 assignmentMatrix <- function(geneStructure, gene=1L, readLength,
                              overHang=1L, bias=0, paired=FALSE, fast=FALSE,
                              fragmentProb=NULL, fragmentStart=0L,
@@ -50,8 +67,6 @@ isoComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
                           paired=FALSE, fast=FALSE, fragmentProb=NULL,
                           fragmentStart=0L, normalMean=NA, normalVar=NA,
                           numDevs=4) {
-
-  require(MASS)
 
   if (missing(expr)) {
     noi <- noIso(geneStructure)[gene]
@@ -113,8 +128,6 @@ crMatrix <- function(geneStructure, gene=1, assignmentMatrix=NULL,
               fragmentStart, normalMean, normalVar, numDevs,
               PACKAGE = "splicing")
 
-  require(MASS)
-
   res[res == Inf] <- 1e100
   res <- ginv(res)
 
@@ -127,8 +140,6 @@ crComplexity <- function(geneStructure, gene=1, readLength, overHang=1L,
                          expr, paired=FALSE, fast=FALSE,
                          fragmentProb=NULL, fragmentStart=0L, normalMean=NA,
                          normalVar=NA, numDevs=4) {
-
-  require(MASS)
   
   rdirichlet <- function (n, alpha) {
     l <- length(alpha)
