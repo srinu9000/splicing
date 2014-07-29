@@ -90,7 +90,8 @@ solveIsoLinBias <- function(geneStructure, gene=1L, reads,
                             fragmentProb=NULL, fragmentStart=0L,
                             normalMean=NA, normalVar=NA, numDevs=4) {
 
-  require(nnls)
+  check_for_package("nnls", " for the linear bias solver")
+  nnls <- pkg_fun("nnls", "nnls")
   
   if (length(readLength) != 1) {
     stop("Variable read length is currently not supported")
@@ -169,7 +170,8 @@ solveIsoQuadBias <- function(geneStructure, gene=1L, reads,
                              normalVar=NA, numDevs=4,
                              lower=-Inf, upper=Inf, ...) {
 
-  require(nnls)
+  check_for_package("nnls", " for the quadratic bias solver")
+  nnls <- pkg_fun("nnls", "nnls")
 
   if (length(readLength) != 1) {
     stop("Variable read length is currently not supported")

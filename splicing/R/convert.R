@@ -1,7 +1,8 @@
 
 listEnsemblGenes <- function(baseURL="ftp://ftp.ensembl.org/pub/current_gtf/") {
 
-  require(RCurl)
+  check_for_package("RCurl", " for downloading files from Ensembl")
+  getURL <- pkg_fun("RCurl", "getURL")
   
   list <- getURL(baseURL)
   list <- strsplit(list, "\n")[[1]]
@@ -20,10 +21,11 @@ getEnsemblGenes <- function(speciesName,
                             baseURL="ftp://ftp.ensembl.org/pub/current_gtf/",
                             verbose=TRUE) {
 
-  require(RCurl)
-
   ## Create the URL
   
+  check_for_package("RCurl", " for downloading files from Ensembl")
+  getURL <- pkg_fun("RCurl", "getURL")
+
   speciesName2 <- gsub(" ", "_", tolower(speciesName))
   list <- getURL(baseURL)
   if (!any(grepl(speciesName2, list))) {

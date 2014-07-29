@@ -22,12 +22,15 @@ run <- function(runFunction, writeFunction, geneStructure, readsfile,
   
   myclusterExport <- function(cl, list) {
     for (name in list) {
+      clusterCall <- pkg_fun("snow", "clusterCall")
       clusterCall(cl, assign, name, get(name))
     }
   }
 
   if (!is.null(snowCluster)) {
-    require(snow)
+    check_for_package("snow", ", it is needed to parallel runs")
+    clusterCall <- pkg_fun("snow", "clusterCall")
+    parLapply <- pkg_fun("snow", "parLapply")
     if (!is.null(seed)) {
       clusterCall(snowCluster, set.seed, seed)
     }

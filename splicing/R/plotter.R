@@ -24,11 +24,15 @@ mylines <- function(x, y, ...) {
   }
 }  
 
-plotIso <- function(geneStructure, gene=1, xlab="", ylab="",
-                    col=rainbow_hcl(noIso(geneStructure)[gene]),
-                    mar=c(0,0,2,0)+.1, axes=FALSE, cex=1, ...) {
+plotIso <- function(geneStructure, gene=1, xlab="", ylab="", col=NULL,
+                   mar=c(0,0,2,0)+.1, axes=FALSE, cex=1, ...) {
 
-  require(colorspace)
+  if (is.null(col)) {
+    check_for_package("colorspace",
+                      " for plotting isoforms with default colors")
+    rainbow_hcl <- pkg_fun("colorspace", "rainbow_hcl")
+    col <- rainbow_hcl(noIso(geneStructure)[gene])
+  }
   
   noIso <- noIso(geneStructure)[gene]  
   col <- rep(col, length.out=noIso)
@@ -96,14 +100,19 @@ addBottomTri <- function(pos, col=1, border=NA, xpd=NA, cex=1, ...) {
 } 
 
 plotMISO <- function(misoResult, type=c("area", "bars"), meanBars=FALSE,
-                     meanTriangles=TRUE, meanTrianglesCex=1,
-                     col=rainbow_hcl(noIso(misoResult$geneStructure)),
+                     meanTriangles=TRUE, meanTrianglesCex=1, col=NULL,
                      legend=c("topright", "topleft", "rightmargin", "none"),
                      xlab="Isoform ratio", ylab="Relative frequency",
                      frame=FALSE, axes=TRUE, cex=0.8, cex.axis=0.8,
                      lwd.axis=0.4, las=1, ...) {
 
-  require(colorspace)
+  if (is.null(col)) {
+    check_for_package("colorspace",
+                      " for plotting MISO results with default colors")
+    rainbow_hcl <- pkg_fun("colorspace", "rainbow_hcl")
+    col <- rainbow_hcl(noIso(misoResult$geneStructure))
+
+  }
 
   type <- match.arg(type)
   legend <- match.arg(legend)
@@ -174,17 +183,24 @@ plotReadsSize <- function(gene, reads, misoResult=NULL) {
 plotReads <- function(gene, reads, misoResult=NULL,
                       misoType=c("area", "bars"), misoMeanBars=FALSE,
                       ## Colors
-                      sampleColors="#e78800ff",
-                      isoformColors=rainbow_hcl(noIso(gene)),
+                      sampleColors="#e78800ff", isoformColors = NULL,
                       ## Default sizes of various plot regions
                       titleHeight=0.15, axisHeight=0.35,
                       geneBaseHeight=0.5, geneIsoHeight=0.5,
                       misoWidth=2, cex.title=2, cex.axis=.8,
                       cex.names=1, cex.junc=1, cex.iso=1) {
 
-  require(igraph)
-  require(colorspace)
+  check_for_package("igraph", " for plotting reads")
+  graph <- pkg_fun("igraph", "graph")
+  bipartite.mapping <- pkg_fun("igraph", "bipartite.mapping")
   
+  if (is.null(isoformColors)) {
+    check_for_package("colorspace",
+                      " for plotting reads with default colors")
+    rainbow_hcl <- pkg_fun("colorspace", "rainbow_hcl")
+    isoformColors <- rainbow_hcl(noIso(gene))
+  }
+
   ## Check arguments
   if (!isGFF3(gene)) { stop("`gene' must be a GFF3 object") }
   if (any(!sapply(reads, isReads))) {

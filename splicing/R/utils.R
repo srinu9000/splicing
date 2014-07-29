@@ -26,3 +26,12 @@
     colnames(retval) <- names(mean)
     retval
   }
+
+check_for_package <- function(pkg, message = "") {
+  res <- try(do.call("library", list(pkg)), silent = TRUE)
+  if (inherits(res, "try-error")) {
+    stop("Cannot load package ", pkg, message, call. = FALSE)
+  }
+}
+
+pkg_fun <- getExportedValue
