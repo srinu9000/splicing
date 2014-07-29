@@ -3,7 +3,6 @@ context("Fisher information matrix")
 
 test_that("crMatrix function works", {
 
-  set.seed(42)
   library(splicing)
 
   gene <- createGene(list(c(1,100), c(201,300), c(401,500)),
