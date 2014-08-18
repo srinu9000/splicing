@@ -77,6 +77,12 @@ gtf2gff3 <- function(gtf, verbose=TRUE) {
     return(res)
   }
 
+  ## These were not there in the old Ensembl files,
+  ## so we drop them from newer ones as well, the exons
+  ## define a transcript, anyway.
+  gtf <- gtf[gtf$feature != "transcript", ]
+  gtf <- gtf[gtf$feature != "gene", ]
+
   gtf$seqname    <- as.character(gtf$seqname)
   gtf$source     <- as.character(gtf$source)
   gtf$feature    <- as.character(gtf$feature)
@@ -100,7 +106,7 @@ gtf2gff3 <- function(gtf, verbose=TRUE) {
   types <- c(gene=SPLICING_GENE, mRNA=SPLICING_MRNA,
              exon=SPLICING_EXON, CDS=SPLICING_CDS,
              start_codon=SPLICING_START_CODON,
-             stop_codon=SPLICING_STOP_CODON)
+             stop_codon=SPLICING_STOP_CODON, UTR = SPLICING_UTR)
   strands <- c("+"=SPLICING_STRAND_PLUS,
                "-"=SPLICING_STRAND_MINUS,
                "."=SPLICING_STRAND_UNKNOWN)
